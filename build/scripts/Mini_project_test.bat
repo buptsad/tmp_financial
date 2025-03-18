@@ -68,7 +68,7 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\Mini_project_test-1.0-SNAPSHOT.jar;%APP_HOME%\lib\flatlaf-intellij-themes-3.4.jar;%APP_HOME%\lib\flatlaf-3.4.jar
+set CLASSPATH=%APP_HOME%\lib\Mini_project_test-1.0-SNAPSHOT.jar;%APP_HOME%\lib\flatlaf-intellij-themes-3.5.jar;%APP_HOME%\lib\flatlaf-3.5.jar
 
 
 @rem Execute Mini_project_test
