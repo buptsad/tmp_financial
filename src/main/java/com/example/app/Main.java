@@ -1,16 +1,16 @@
 package com.example.app;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import javax.swing.*;
 import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
-        // Set up FlatLaF
+        // Set up FlatDarculaLaf (dark theme)
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
+            UIManager.setLookAndFeel(new FlatDarculaLaf());
         } catch (Exception ex) {
-            System.err.println("Failed to initialize FlatLaF");
+            System.err.println("Failed to initialize FlatDarculaLaf");
         }
         
         // Ensure we're running on the EDT (Event Dispatch Thread)
@@ -50,7 +50,8 @@ public class Main {
         // Create a text area for the main content
         JTextArea textArea = new JTextArea();
         textArea.setText("Welcome to your FlatLaF Swing Application!\n\n" +
-                         "This is a simple demo showing how to use FlatLaF with Java Swing.");
+                         "This is a simple demo showing how to use FlatLaF with Java Swing.\n\n" +
+                         "You're currently using the Darcula dark theme!");
         JScrollPane scrollPane = new JScrollPane(textArea);
         
         // Add components to content panel
