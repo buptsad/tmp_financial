@@ -20,6 +20,9 @@ dependencies {
     // Additional FlatLaF themes (optional)
     implementation 'com.formdev:flatlaf-intellij-themes:3.5'
     
+    // JFreeChart for charts and graphs
+    implementation 'org.jfree:jfreechart:1.5.4'
+    
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 }
