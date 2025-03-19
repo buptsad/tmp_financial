@@ -18,9 +18,14 @@ public class FinanceData {
     // Expenses by category
     private Map<String, Double> categoryExpenses;
     
+    // Sample transaction descriptions
+    private String[] expenseDescriptions;
+    private String[] incomeDescriptions;
+    
     public FinanceData() {
         // Initialize data
         initializeData();
+        initializeTransactionDescriptions();
     }
     
     private void initializeData() {
@@ -73,6 +78,24 @@ public class FinanceData {
             dailyIncomes.put(date, income);
             dailyExpenses.put(date, expense);
         }
+    }
+    
+    private void initializeTransactionDescriptions() {
+        // Sample descriptions for expense transactions
+        expenseDescriptions = new String[] {
+            "Grocery Shopping", "Restaurant Bill", "Gas Station", "Electric Bill", 
+            "Internet Bill", "Movie Tickets", "Online Purchase", "Coffee Shop",
+            "Rent Payment", "Phone Bill", "Gym Membership", "Bus Ticket",
+            "Home Repair", "New Clothes", "Pet Food", "Medicine",
+            "Subscription Service", "School Supplies", "Takeout Food", "Car Repair"
+        };
+        
+        // Sample descriptions for income transactions
+        incomeDescriptions = new String[] {
+            "Salary Payment", "Freelance Work", "Investment Return", "Side Gig",
+            "Tax Refund", "Gift", "Bonus", "Commission",
+            "Rental Income", "Dividend Payment", "Consulting Fee", "Interest Income"
+        };
     }
     
     public double getTotalBalance() {
@@ -139,5 +162,22 @@ public class FinanceData {
     
     public double getOverallBudgetPercentage() {
         return (getTotalExpenses() / getMonthlyBudget()) * 100;
+    }
+    
+    // Methods to access transaction descriptions
+    public String getRandomExpenseDescription(Random random) {
+        return expenseDescriptions[random.nextInt(expenseDescriptions.length)];
+    }
+    
+    public String getRandomIncomeDescription(Random random) {
+        return incomeDescriptions[random.nextInt(incomeDescriptions.length)];
+    }
+    
+    public String[] getExpenseDescriptions() {
+        return expenseDescriptions;
+    }
+    
+    public String[] getIncomeDescriptions() {
+        return incomeDescriptions;
     }
 }
