@@ -130,7 +130,6 @@ public class TransactionsPanel extends JPanel {
         
         // Process and add all dates
         List<LocalDate> dates = financeData.getDates();
-        Random random = new Random();
         
         for (LocalDate date : dates) {
             Double expense = expenses.get(date);
@@ -141,8 +140,8 @@ public class TransactionsPanel extends JPanel {
             
             // Add expense transaction
             if (expense != null && expense > 0) {
-                String category = getRandomCategory(financeData.getCategoryExpenses().keySet(), random);
-                String description = financeData.getRandomExpenseDescription(random);
+                String category = financeData.getExpenseCategory(date);
+                String description = financeData.getExpenseDescription(date);
                 
                 // Add negative expense
                 Object[] rowData = {dateStr, description, category, -expense, false};
@@ -152,7 +151,7 @@ public class TransactionsPanel extends JPanel {
             // Add income transaction
             if (income != null && income > 0) {
                 // For incomes, use "Income" category
-                String description = financeData.getRandomIncomeDescription(random);
+                String description = financeData.getIncomeDescription(date);
                 
                 // Add positive income
                 Object[] rowData = {dateStr, description, "Income", income, false};

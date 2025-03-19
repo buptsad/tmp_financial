@@ -22,10 +22,15 @@ public class FinanceData {
     private String[] expenseDescriptions;
     private String[] incomeDescriptions;
     
+    // Maps to store consistent transaction descriptions for each date
+    private Map<LocalDate, String> dailyExpenseDescriptions;
+    private Map<LocalDate, String> dailyIncomeDescriptions;
+    private Map<LocalDate, String> dailyExpenseCategories;
+    
     public FinanceData() {
         // Initialize data
-        initializeData();
         initializeTransactionDescriptions();
+        initializeData();
     }
     
     private void initializeData() {
@@ -33,6 +38,9 @@ public class FinanceData {
         LocalDate today = LocalDate.now();
         dailyIncomes = new HashMap<>();
         dailyExpenses = new HashMap<>();
+        dailyExpenseDescriptions = new HashMap<>();
+        dailyIncomeDescriptions = new HashMap<>();
+        dailyExpenseCategories = new HashMap<>();
         
         // Initialize category budgets
         categoryBudgets = new LinkedHashMap<>();
@@ -54,29 +62,42 @@ public class FinanceData {
         categoryExpenses.put("Healthcare", 175.00);
         categoryExpenses.put("Other", 420.00);
         
+        // Create a list of categories for random selection
+        List<String> categoryList = new ArrayList<>(categoryExpenses.keySet());
+        Random random = new Random(42); // Use fixed seed for reproducibility
+        
         // Generate some sample data
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             
             // Income varies between 150-200 with some peaks
-            double income = 150 + Math.random() * 50;
+            double income = 150 + random.nextDouble() * 50;
             if (date.getDayOfMonth() == 15 || date.getDayOfMonth() == 1) {
                 // Salary days - higher income
-                income = 2500 + Math.random() * 200;
+                income = 2500 + random.nextDouble() * 200;
             }
             
             // Expenses vary between 100-180 with some peaks
-            double expense = 100 + Math.random() * 80;
+            double expense = 100 + random.nextDouble() * 80;
             if (date.getDayOfWeek().getValue() >= 5) { // Weekend
-                expense += 50 + Math.random() * 30; // Higher weekend expenses
+                expense += 50 + random.nextDouble() * 30; // Higher weekend expenses
             }
             if (date.getDayOfMonth() == 10 || date.getDayOfMonth() == 25) {
                 // Bill payment days - higher expenses
-                expense += 500 + Math.random() * 100;
+                expense += 500 + random.nextDouble() * 100;
             }
             
+            // Store the financial data
             dailyIncomes.put(date, income);
             dailyExpenses.put(date, expense);
+            
+            // Store consistent descriptions and categories
+            dailyExpenseDescriptions.put(date, 
+                    expenseDescriptions[random.nextInt(expenseDescriptions.length)]);
+            dailyIncomeDescriptions.put(date, 
+                    incomeDescriptions[random.nextInt(incomeDescriptions.length)]);
+            dailyExpenseCategories.put(date, 
+                    categoryList.get(random.nextInt(categoryList.size())));
         }
     }
     
@@ -164,7 +185,20 @@ public class FinanceData {
         return (getTotalExpenses() / getMonthlyBudget()) * 100;
     }
     
-    // Methods to access transaction descriptions
+    // Methods to access consistent transaction descriptions
+    public String getExpenseDescription(LocalDate date) {
+        return dailyExpenseDescriptions.getOrDefault(date, "Unknown expense");
+    }
+    
+    public String getIncomeDescription(LocalDate date) {
+        return dailyIncomeDescriptions.getOrDefault(date, "Unknown income");
+    }
+    
+    public String getExpenseCategory(LocalDate date) {
+        return dailyExpenseCategories.getOrDefault(date, "Other");
+    }
+    
+    // Methods to access random transaction descriptions (for new transactions)
     public String getRandomExpenseDescription(Random random) {
         return expenseDescriptions[random.nextInt(expenseDescriptions.length)];
     }

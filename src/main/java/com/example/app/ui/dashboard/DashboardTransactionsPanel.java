@@ -104,7 +104,6 @@ public class DashboardTransactionsPanel extends JPanel {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         Map<LocalDate, Double> expenses = financeData.getDailyExpenses();
         Map<LocalDate, Double> incomes = financeData.getDailyIncomes();
-        Random random = new Random();
         
         // Create a combined list of all transaction data
         List<TransactionEntry> allTransactions = new ArrayList<>();
@@ -119,8 +118,8 @@ public class DashboardTransactionsPanel extends JPanel {
             
             // Add expense transaction
             if (expense != null && expense > 0) {
-                String category = getRandomCategory(financeData.getCategoryExpenses().keySet(), random);
-                String description = financeData.getRandomExpenseDescription(random);
+                String category = financeData.getExpenseCategory(date);
+                String description = financeData.getExpenseDescription(date);
                 
                 allTransactions.add(new TransactionEntry(
                     date, description, category, -expense
@@ -129,7 +128,7 @@ public class DashboardTransactionsPanel extends JPanel {
             
             // Add income transaction
             if (income != null && income > 0) {
-                String description = financeData.getRandomIncomeDescription(random);
+                String description = financeData.getIncomeDescription(date);
                 
                 allTransactions.add(new TransactionEntry(
                     date, description, "Income", income
