@@ -1,6 +1,7 @@
 package com.example.app.ui.pages;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.dialogs.CSVImportDialog;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -174,12 +175,15 @@ public class TransactionsPanel extends JPanel {
         
         addButton = new JButton("Add Transaction");
         deleteButton = new JButton("Delete Selected");
+        JButton loadFromCSVButton = new JButton("Load from CSV");
         
         addButton.addActionListener(e -> addNewTransaction());
         deleteButton.addActionListener(e -> deleteSelectedTransactions());
+        loadFromCSVButton.addActionListener(e -> openCSVImportDialog());
         
         leftPanel.add(addButton);
         leftPanel.add(deleteButton);
+        leftPanel.add(loadFromCSVButton);
         
         // Right side buttons
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -206,6 +210,24 @@ public class TransactionsPanel extends JPanel {
         return panel;
     }
     
+    private void openCSVImportDialog() {
+        CSVImportDialog dialog = new CSVImportDialog(SwingUtilities.getWindowAncestor(this), this);
+        dialog.setVisible(true);
+    }
+
+    // Method to add transactions from CSV import
+    public void addTransactionsFromCSV(List<Object[]> transactions) {
+        if (transactions == null || transactions.isEmpty()) {
+            return;
+        }
+        
+        for (Object[] transaction : transactions) {
+            tableModel.insertRow(0, transaction);
+        }
+        
+        setHasUnsavedChanges(true);
+    }
+
     private void applyFilters() {
         String searchText = searchField.getText().toLowerCase();
         String selectedCategory = (String) categoryFilterComboBox.getSelectedItem();
