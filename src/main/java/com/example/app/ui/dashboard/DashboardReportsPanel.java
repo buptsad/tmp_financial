@@ -1,6 +1,10 @@
 package com.example.app.ui.dashboard;
 
 import javax.swing.*;
+
+import com.example.app.ui.dashboard.report.CategorySpendingChartPanel;
+import com.example.app.ui.dashboard.report.IncomeExpensesChartPanel;
+
 import java.awt.*;
 
 public class DashboardReportsPanel extends JPanel {
@@ -12,10 +16,18 @@ public class DashboardReportsPanel extends JPanel {
         titleLabel.setFont(new Font(titleLabel.getFont().getName(), Font.BOLD, 16));
         add(titleLabel, BorderLayout.NORTH);
         
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        JLabel contentLabel = new JLabel("Financial reports and charts would go here");
-        centerPanel.add(contentLabel);
+        // Create panel to hold both charts
+        JPanel chartsPanel = new JPanel(new GridLayout(2, 1, 0, 20));
+        chartsPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
-        add(centerPanel, BorderLayout.CENTER);
+        // Add the two chart panels
+        chartsPanel.add(new IncomeExpensesChartPanel());
+        chartsPanel.add(new CategorySpendingChartPanel());
+        
+        // Add to main panel with scroll support
+        JScrollPane scrollPane = new JScrollPane(chartsPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        add(scrollPane, BorderLayout.CENTER);
     }
 }
