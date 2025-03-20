@@ -1,6 +1,8 @@
 package com.example.app.ui.reports;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,7 +17,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.Map;
 
-public class CategoryBreakdownPanel extends JPanel {
+public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeListener {
     
     private final FinanceData financeData;
     private ChartPanel chartPanel;
@@ -33,6 +35,9 @@ public class CategoryBreakdownPanel extends JPanel {
         chartPanel.setMouseWheelEnabled(true);
         
         add(chartPanel, BorderLayout.CENTER);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private JFreeChart createChart() {
@@ -60,9 +65,11 @@ public class CategoryBreakdownPanel extends JPanel {
             index++;
         }
         
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        
         // Customize labels
         PieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator(
-                "{0}: ${1} ({2})",
+                "{0}: " + currencySymbol + "{1} ({2})",
                 new DecimalFormat("0.00"),
                 new DecimalFormat("0.0%")
         );
@@ -110,5 +117,18 @@ public class CategoryBreakdownPanel extends JPanel {
         JFreeChart chart = createChart();
         chartPanel.setChart(chart);
         chartPanel.repaint();
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新图表
+        refreshChart();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

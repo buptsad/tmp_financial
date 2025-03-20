@@ -1,6 +1,8 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -11,9 +13,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
-public class DashboardTransactionsPanel extends JPanel {
+public class DashboardTransactionsPanel extends JPanel implements CurrencyChangeListener {
     private JTable transactionsTable;
     private FinanceData financeData;
+    private DefaultTableModel tableModel;
     
     public DashboardTransactionsPanel() {
         financeData = new FinanceData();
@@ -34,6 +37,9 @@ public class DashboardTransactionsPanel extends JPanel {
         JButton viewAllButton = new JButton("View All Transactions");
         buttonPanel.add(viewAllButton);
         add(buttonPanel, BorderLayout.SOUTH);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private void createTransactionsTable() {
@@ -41,7 +47,7 @@ public class DashboardTransactionsPanel extends JPanel {
         String[] columns = {"Date", "Description", "Category", "Amount"};
         
         // Create table model with proper column classes
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
+        tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public Class<?> getColumnClass(int column) {
                 if (column == 3) return Double.class; // For proper sorting of amounts
@@ -55,10 +61,10 @@ public class DashboardTransactionsPanel extends JPanel {
         };
         
         // Use FinanceData to populate the table
-        populateTableWithRecentTransactions(model);
+        populateTableWithRecentTransactions(tableModel);
         
         // Create and configure table
-        transactionsTable = new JTable(model);
+        transactionsTable = new JTable(tableModel);
         transactionsTable.setRowHeight(30);
         transactionsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         transactionsTable.setShowGrid(true);
@@ -89,7 +95,8 @@ public class DashboardTransactionsPanel extends JPanel {
                     
                     // Format with currency symbol and align right
                     setHorizontalAlignment(SwingConstants.RIGHT);
-                    setText(String.format("$%.2f", amount));
+                    String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+                    setText(String.format("%s%.2f",currencySymbol, amount));
                 }
                 
                 return comp;
@@ -98,6 +105,43 @@ public class DashboardTransactionsPanel extends JPanel {
         
         // Apply renderer to amount column
         transactionsTable.getColumnModel().getColumn(3).setCellRenderer(amountRenderer);
+        updateAmountRenderer();
+    }
+
+    private void updateAmountRenderer() {
+        // 获取货币符号
+        final String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        
+        // Create a custom renderer to color amounts (red for negative, green for positive)
+        DefaultTableCellRenderer amountRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, 
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                
+                Component comp = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+                
+                if (value instanceof Double) {
+                    double amount = (Double) value;
+                    if (amount < 0) {
+                        comp.setForeground(new Color(220, 50, 50)); // Red for expenses
+                    } else {
+                        comp.setForeground(new Color(50, 150, 50)); // Green for income
+                    }
+                    
+                    // Format with currency symbol and align right
+                    setHorizontalAlignment(SwingConstants.RIGHT);
+                    setText(String.format("%s%.2f", currencySymbol, Math.abs(amount)));
+                }
+                
+                return comp;
+            }
+        };
+        
+        // Apply renderer to amount column
+        if (transactionsTable != null) {
+            transactionsTable.getColumnModel().getColumn(3).setCellRenderer(amountRenderer);
+        }
     }
     
     private void populateTableWithRecentTransactions(DefaultTableModel model) {
@@ -177,5 +221,19 @@ public class DashboardTransactionsPanel extends JPanel {
         public String getDescription() { return description; }
         public String getCategory() { return category; }
         public double getAmount() { return amount; }
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时更新渲染器并刷新表格
+        updateAmountRenderer();
+        transactionsTable.repaint();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

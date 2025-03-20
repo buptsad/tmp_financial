@@ -1,6 +1,8 @@
 package com.example.app.ui.reports;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -19,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class IncomeExpensesReportPanel extends JPanel {
+public class IncomeExpensesReportPanel extends JPanel implements CurrencyChangeListener {
     
     private final FinanceData financeData;
     private ChartPanel chartPanel;
@@ -37,16 +39,22 @@ public class IncomeExpensesReportPanel extends JPanel {
         chartPanel.setMouseWheelEnabled(true);
         
         add(chartPanel, BorderLayout.CENTER);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private JFreeChart createChart() {
         XYDataset dataset = createDataset();
         
+        // 获取当前货币符号
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        
         String title = "Income vs. Expenses (" + timeRange + ")";
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 title,
                 "Date",
-                "Amount ($)",
+                "Amount (" + currencySymbol + ")",
                 dataset,
                 true,
                 true,
@@ -159,5 +167,18 @@ public class IncomeExpensesReportPanel extends JPanel {
             default:
                 return today.minusDays(30);
         }
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新图表
+        refreshChart();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

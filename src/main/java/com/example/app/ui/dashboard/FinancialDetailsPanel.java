@@ -1,6 +1,11 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
+
+// Ensure the CurrencyManager class exists in the specified package
+// If it doesn't exist, create the class in the com.example.app.util package
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -8,8 +13,10 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.Map;
 
-public class FinancialDetailsPanel extends JPanel {
+public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListener {
     private FinanceData financeData;
+    private JPanel summaryPanel;
+    private JPanel progressPanel;
     
     public FinancialDetailsPanel(FinanceData financeData) {
         this.financeData = financeData;
@@ -17,13 +24,44 @@ public class FinancialDetailsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(0, 10, 0, 0));
         
-        // Add all panel sections
-        add(createSummaryPanel());
+        // 创建面板
+        summaryPanel = createSummaryPanel();
+        progressPanel = createCategoryProgressPanel();
+        JPanel tipsPanel = createTipsPanel();
+        
+        // 添加面板
+        add(summaryPanel);
         add(Box.createVerticalStrut(15));
-        add(createCategoryProgressPanel());
+        add(progressPanel);
         add(Box.createVerticalStrut(15));
-        add(createTipsPanel());
-        add(Box.createVerticalGlue()); // Push everything to the top
+        add(tipsPanel);
+        add(Box.createVerticalGlue());
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
+    }
+    
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 当货币变化时刷新显示
+        removeAll();
+        
+        // 重新创建面板
+        summaryPanel = createSummaryPanel();
+        progressPanel = createCategoryProgressPanel();
+        JPanel tipsPanel = createTipsPanel();
+        
+        // 重新添加面板
+        add(summaryPanel);
+        add(Box.createVerticalStrut(15));
+        add(progressPanel);
+        add(Box.createVerticalStrut(15));
+        add(tipsPanel);
+        add(Box.createVerticalGlue());
+        
+        // 刷新UI
+        revalidate();
+        repaint();
     }
     
     private JPanel createSummaryPanel() {
@@ -41,21 +79,24 @@ public class FinancialDetailsPanel extends JPanel {
         ));
         summaryPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // Add summary items
+        // 使用CurrencyManager格式化金额
+        CurrencyManager cm = CurrencyManager.getInstance();
+        
+        // 添加摘要项
         summaryPanel.add(createLabelPanel("Monthly Budget:", 
-            String.format("$%.2f", financeData.getMonthlyBudget())));
+            cm.formatCurrency(financeData.getMonthlyBudget())));
         summaryPanel.add(Box.createVerticalStrut(10));
         
         summaryPanel.add(createLabelPanel("Total Income:", 
-            String.format("$%.2f", financeData.getTotalIncome())));
+            cm.formatCurrency(financeData.getTotalIncome())));
         summaryPanel.add(Box.createVerticalStrut(10));
         
         summaryPanel.add(createLabelPanel("Total Expenses:", 
-            String.format("$%.2f", financeData.getTotalExpenses())));
+            cm.formatCurrency(financeData.getTotalExpenses())));
         summaryPanel.add(Box.createVerticalStrut(10));
         
         summaryPanel.add(createLabelPanel("Net Savings:", 
-            String.format("$%.2f", financeData.getTotalSavings())));
+            cm.formatCurrency(financeData.getTotalSavings())));
         
         return summaryPanel;
     }
@@ -75,16 +116,19 @@ public class FinancialDetailsPanel extends JPanel {
         ));
         progressPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // First, add the overall budget progress
+        // 使用CurrencyManager格式化金额
+        CurrencyManager cm = CurrencyManager.getInstance();
+        
+        // 添加总体预算进度
         double overallPercentage = financeData.getOverallBudgetPercentage();
         JPanel overallPanel = new JPanel();
         overallPanel.setLayout(new BoxLayout(overallPanel, BoxLayout.Y_AXIS));
         overallPanel.setBorder(BorderFactory.createTitledBorder("Overall"));
         overallPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        JLabel overallLabel = new JLabel(String.format("$%.2f of $%.2f (%.1f%%)", 
-            financeData.getTotalExpenses(), 
-            financeData.getMonthlyBudget(),
+        JLabel overallLabel = new JLabel(String.format("%s of %s (%.1f%%)", 
+            cm.formatCurrency(financeData.getTotalExpenses()), 
+            cm.formatCurrency(financeData.getMonthlyBudget()),
             overallPercentage));
         overallLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
@@ -99,13 +143,13 @@ public class FinancialDetailsPanel extends JPanel {
         progressPanel.add(overallPanel);
         progressPanel.add(Box.createVerticalStrut(15));
         
-        // Add a panel for category progress bars
+        // 添加分类预算进度条面板
         JPanel categoriesPanel = new JPanel();
         categoriesPanel.setLayout(new BoxLayout(categoriesPanel, BoxLayout.Y_AXIS));
         categoriesPanel.setBorder(BorderFactory.createTitledBorder("Categories"));
         categoriesPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        // Add progress bars for each category
+        // 为每个分类添加进度条
         Map<String, Double> categoryBudgets = financeData.getCategoryBudgets();
         Map<String, Double> categoryExpenses = financeData.getCategoryExpenses();
         
@@ -120,9 +164,9 @@ public class FinancialDetailsPanel extends JPanel {
             
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.fill = GridBagConstraints.HORIZONTAL;
-            gbc.insets = new Insets(0, 0, 0, 5);  // Small spacing between components
+            gbc.insets = new Insets(0, 0, 0, 5);
             
-            // Label for category
+            // 分类标签
             JLabel categoryLabel = new JLabel(category);
             categoryLabel.setPreferredSize(new Dimension(100, 20));
             gbc.gridx = 0;
@@ -130,16 +174,17 @@ public class FinancialDetailsPanel extends JPanel {
             gbc.weightx = 0.0;
             categoryPanel.add(categoryLabel, gbc);
             
-            // Progress bar
+            // 进度条
             JProgressBar progressBar = createProgressBar(percentage);
             gbc.gridx = 1;
-            gbc.weightx = 1.0;  // Progress bar takes up all available space
+            gbc.weightx = 1.0;
             categoryPanel.add(progressBar, gbc);
             
-            // Value label
-            JLabel valueLabel = new JLabel(String.format("$%.0f / $%.0f", expense, budget));
+            // 数值标签 - 使用CurrencyManager格式化
+            JLabel valueLabel = new JLabel(String.format("%s / %s", 
+                cm.formatCurrency(expense), cm.formatCurrency(budget)));
             valueLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-            valueLabel.setPreferredSize(new Dimension(90, 20));
+            valueLabel.setPreferredSize(new Dimension(120, 20));
             gbc.gridx = 2;
             gbc.weightx = 0.0;
             categoryPanel.add(valueLabel, gbc);
@@ -189,6 +234,7 @@ public class FinancialDetailsPanel extends JPanel {
         StringBuilder tipText = new StringBuilder();
         Map<String, Double> categoryBudgets = financeData.getCategoryBudgets();
         Map<String, Double> categoryExpenses = financeData.getCategoryExpenses();
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         
         boolean foundOverBudget = false;
         for (String category : categoryBudgets.keySet()) {
@@ -201,7 +247,9 @@ public class FinancialDetailsPanel extends JPanel {
                     foundOverBudget = true;
                 }
                 double overage = expense - budget;
-                tipText.append(String.format("• %s is $%.2f over budget\n", category, overage));
+                // 使用当前货币符号
+                tipText.append(String.format("• %s is %s%.2f over budget\n", 
+                    category, currencySymbol, overage));
             }
         }
         
@@ -247,5 +295,11 @@ public class FinancialDetailsPanel extends JPanel {
         panel.add(valueComponent, BorderLayout.EAST);
         
         return panel;
+    }
+
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }
