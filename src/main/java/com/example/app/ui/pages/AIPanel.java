@@ -1,5 +1,6 @@
 package com.example.app.ui.pages;
 
+import com.example.app.ui.dashboard.OverviewPanel;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -38,6 +39,29 @@ public class AIPanel extends JPanel {
         chatScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(chatScrollPane, BorderLayout.CENTER);
 
+        // Add regenerate advice button panel
+        JPanel regeneratePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton regenerateButton = new JButton("Regenerate Financial Advice");
+        regenerateButton.setFocusPainted(false);
+        regenerateButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        regenerateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Regenerate the shared advice
+                OverviewPanel.sharedAdvice.regenerate();
+                
+                // Notify user in the chat area
+                appendMessage("System: Financial advice has been updated with new AI insights.");
+                
+                // In a real application, we would find and notify the OverviewPanel to update
+                // For a demo this is sufficient
+            }
+        });
+        
+        regeneratePanel.add(regenerateButton);
+        add(regeneratePanel, BorderLayout.NORTH);
+
         // Input panel (text field + send button)
         JPanel inputPanel = new JPanel(new BorderLayout(10, 0));
         inputField = new JTextField();
@@ -49,9 +73,6 @@ public class AIPanel extends JPanel {
         sendButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         sendButton.setFocusPainted(false);
         sendButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        sendButton.setBackground(new Color(70, 130, 180));
-        sendButton.setForeground(Color.WHITE);
-        sendButton.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         inputPanel.add(sendButton, BorderLayout.EAST);
 
         add(inputPanel, BorderLayout.SOUTH);
@@ -71,6 +92,9 @@ public class AIPanel extends JPanel {
                 sendMessage();
             }
         });
+        
+        // Add initial welcome message
+        appendMessage("AI: Hello! I can help analyze your finances and provide personalized advice. Ask me anything about your financial data.");
     }
 
     private void sendMessage() {

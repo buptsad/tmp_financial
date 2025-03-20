@@ -1,11 +1,9 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.model.FinancialAdvice;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
-
-// Ensure the CurrencyManager class exists in the specified package
-// If it doesn't exist, create the class in the com.example.app.util package
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -15,11 +13,20 @@ import java.util.Map;
 
 public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListener {
     private FinanceData financeData;
+    private FinancialAdvice financialAdvice;
     private JPanel summaryPanel;
     private JPanel progressPanel;
+    private JPanel tipsPanel;
+    private JTextArea tipArea;
+    private JLabel adviceTimeLabel;
     
     public FinancialDetailsPanel(FinanceData financeData) {
+        this(financeData, OverviewPanel.sharedAdvice);
+    }
+    
+    public FinancialDetailsPanel(FinanceData financeData, FinancialAdvice financialAdvice) {
         this.financeData = financeData;
+        this.financialAdvice = financialAdvice;
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(new EmptyBorder(0, 10, 0, 0));
@@ -27,7 +34,7 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
         // 创建面板
         summaryPanel = createSummaryPanel();
         progressPanel = createCategoryProgressPanel();
-        JPanel tipsPanel = createTipsPanel();
+        tipsPanel = createTipsPanel();
         
         // 添加面板
         add(summaryPanel);
@@ -49,7 +56,7 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
         // 重新创建面板
         summaryPanel = createSummaryPanel();
         progressPanel = createCategoryProgressPanel();
-        JPanel tipsPanel = createTipsPanel();
+        tipsPanel = createTipsPanel();
         
         // 重新添加面板
         add(summaryPanel);
@@ -65,6 +72,9 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
     }
     
     private JPanel createSummaryPanel() {
+        // ... existing code unchanged ...
+        
+        // Same as before
         JPanel summaryPanel = new JPanel();
         summaryPanel.setLayout(new BoxLayout(summaryPanel, BoxLayout.Y_AXIS));
         summaryPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -102,6 +112,9 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
     }
     
     private JPanel createCategoryProgressPanel() {
+        // ... existing code unchanged ...
+        
+        // Same as before
         JPanel progressPanel = new JPanel();
         progressPanel.setLayout(new BoxLayout(progressPanel, BoxLayout.Y_AXIS));
         progressPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -199,6 +212,8 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
     }
     
     private JProgressBar createProgressBar(double percentage) {
+        // ... existing code unchanged ...
+        
         JProgressBar progressBar = new JProgressBar(0, 100);
         progressBar.setValue((int) percentage);
         progressBar.setStringPainted(true);
@@ -221,7 +236,7 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
         tipsPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                "Financial Tips",
+                "Financial Tips & Local Context",
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 new Font("SansSerif", Font.BOLD, 14)
@@ -259,7 +274,7 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
             if (percentUsed > 90) {
                 tipText.append("You're close to exceeding your overall budget. Consider reducing non-essential expenses.");
             } else if (percentUsed > 70) {
-                tipText.append("You've used most of your budget. Monitor your spending carefully.");
+                tipText.append("You're managing your budget well. Monitor your spending carefully.");
             } else {
                 tipText.append("You're managing your budget well. Consider saving the surplus!");
             }
@@ -267,7 +282,12 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
             tipText.append("\nConsider adjusting your spending in the categories above.");
         }
         
-        JTextArea tipArea = new JTextArea(tipText.toString());
+        // Add local financial context
+        tipText.append("\n\n");
+        tipText.append("Local Financial Context:\n");
+        tipText.append(financialAdvice.getAdvice());
+        
+        tipArea = new JTextArea(tipText.toString());
         tipArea.setWrapStyleWord(true);
         tipArea.setLineWrap(true);
         tipArea.setEditable(false);
@@ -276,12 +296,24 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
         tipArea.setBorder(null);
         tipArea.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        tipsPanel.add(tipArea);
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(UIManager.getColor("Panel.background"));
+        contentPanel.add(tipArea, BorderLayout.CENTER);
+        
+        // Add generation time at the bottom
+        adviceTimeLabel = new JLabel("Financial context generated: " + financialAdvice.getFormattedGenerationTime());
+        adviceTimeLabel.setFont(new Font(adviceTimeLabel.getFont().getName(), Font.ITALIC, 11));
+        adviceTimeLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        contentPanel.add(adviceTimeLabel, BorderLayout.SOUTH);
+        
+        tipsPanel.add(contentPanel);
         
         return tipsPanel;
     }
     
     private JPanel createLabelPanel(String label, String value) {
+        // ... existing code unchanged ...
+        
         JPanel panel = new JPanel(new BorderLayout(10, 0));
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -295,6 +327,17 @@ public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListe
         panel.add(valueComponent, BorderLayout.EAST);
         
         return panel;
+    }
+    
+    // Method to update advice display when it changes
+    public void updateAdviceDisplay() {
+        if (tipsPanel != null) {
+            remove(tipsPanel);
+            tipsPanel = createTipsPanel();
+            add(tipsPanel, 4); // Add at the original position
+            revalidate();
+            repaint();
+        }
     }
 
     @Override
