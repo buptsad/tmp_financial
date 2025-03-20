@@ -1,6 +1,8 @@
 package com.example.app.ui.reports;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -19,7 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 
-public class TrendReportPanel extends JPanel {
+public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
     
     private final FinanceData financeData;
     private ChartPanel chartPanel;
@@ -38,16 +40,22 @@ public class TrendReportPanel extends JPanel {
         chartPanel.setMouseWheelEnabled(true);
         
         add(chartPanel, BorderLayout.CENTER);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private JFreeChart createChart() {
         XYDataset dataset = createDataset();
         
+        // 获取当前货币符号
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        
         String title = "Financial Trends - " + interval + " (" + timeRange + ")";
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 title,
                 "Date",
-                "Amount ($)",
+                "Amount (" + currencySymbol + ")",
                 dataset,
                 true,
                 true,
@@ -251,5 +259,18 @@ public class TrendReportPanel extends JPanel {
             default:
                 return today.minusDays(30);
         }
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新图表
+        refreshChart();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

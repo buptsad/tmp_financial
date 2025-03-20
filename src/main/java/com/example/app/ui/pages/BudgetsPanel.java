@@ -1,6 +1,8 @@
 package com.example.app.ui.pages;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.BudgetCategoryPanel;
 import com.example.app.ui.dashboard.BudgetDialog;
 
@@ -11,7 +13,7 @@ import java.awt.event.ActionEvent;
 import java.util.*;
 import java.util.List;
 
-public class BudgetsPanel extends JPanel {
+public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     private final FinanceData financeData;
     private final JPanel userBudgetsPanel;
     private final JPanel aiSuggestedPanel;
@@ -108,6 +110,10 @@ public class BudgetsPanel extends JPanel {
         contentPanel.add(userPanel);
         contentPanel.add(aiPanel);
         add(contentPanel, BorderLayout.CENTER);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
+        
     }
 
     private void updateUserCategoryPanels() {
@@ -138,7 +144,8 @@ public class BudgetsPanel extends JPanel {
         JPanel totalPanel = new JPanel(new BorderLayout());
         totalPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY));
         
-        JLabel totalLabel = new JLabel(String.format("<html><b>Total: $%.2f</b></html>", totalBudget));
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        JLabel totalLabel = new JLabel(String.format("<html><b>Total: %s%.2f</b></html>", currencySymbol,totalBudget));
         totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 14));
         totalPanel.add(totalLabel, BorderLayout.WEST);
         
@@ -174,7 +181,8 @@ public class BudgetsPanel extends JPanel {
         JPanel totalPanel = new JPanel(new BorderLayout());
         totalPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY));
         
-        JLabel totalLabel = new JLabel(String.format("<html><b>Total: $%.2f</b></html>", totalBudget));
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        JLabel totalLabel = new JLabel(String.format("<html><b>Total: %s%.2f</b></html>",currencySymbol ,totalBudget));
         totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 14));
         totalPanel.add(totalLabel, BorderLayout.WEST);
         
@@ -191,6 +199,8 @@ public class BudgetsPanel extends JPanel {
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
+
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         
         // Category name and budget amount
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -198,7 +208,7 @@ public class BudgetsPanel extends JPanel {
         categoryLabel.setFont(new Font(categoryLabel.getFont().getName(), Font.BOLD, 14));
         leftPanel.add(categoryLabel, BorderLayout.NORTH);
         
-        JLabel budgetLabel = new JLabel(String.format("$%.2f", budget));
+        JLabel budgetLabel = new JLabel(String.format("%s%.2f", currencySymbol, budget));
         budgetLabel.setFont(new Font(budgetLabel.getFont().getName(), Font.PLAIN, 14));
         leftPanel.add(budgetLabel, BorderLayout.SOUTH);
         
@@ -206,19 +216,24 @@ public class BudgetsPanel extends JPanel {
         
         // Difference indicator
         JPanel rightPanel = new JPanel(new BorderLayout());
-        String diffText;
-        Color diffColor;
         
-        if (Math.abs(difference) < 0.01) {
-            diffText = "No change";
-            diffColor = Color.GRAY;
-        } else if (difference > 0) {
-            diffText = String.format("+$%.2f", difference);
-            diffColor = new Color(46, 204, 113); // Green
-        } else {
-            diffText = String.format("-$%.2f", Math.abs(difference));
-            diffColor = new Color(231, 76, 60); // Red
-        }
+                // 修改预算显示
+                JLabel aiBudgetLabel = new JLabel(String.format("%s%.2f", currencySymbol, budget));
+                
+                // 修改差异显示
+                String diffText;
+                Color diffColor;
+                
+                if (Math.abs(difference) < 0.01) {
+                    diffText = "No change";
+                    diffColor = Color.GRAY;
+                } else if (difference > 0) {
+                    diffText = String.format("+%s%.2f", currencySymbol, difference);
+                    diffColor = new Color(46, 204, 113); // Green
+                } else {
+                    diffText = String.format("-%s%.2f", currencySymbol, Math.abs(difference));
+                    diffColor = new Color(231, 76, 60); // Red
+                }
         
         JLabel diffLabel = new JLabel(diffText);
         diffLabel.setForeground(diffColor);
@@ -277,13 +292,15 @@ public class BudgetsPanel extends JPanel {
     }
     
     private void addNewCategory() {
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+
         BudgetDialog dialog = new BudgetDialog(SwingUtilities.getWindowAncestor(this), "Add Category", "", 0.0);
         if (dialog.showDialog()) {
             String category = dialog.getCategory();
             double budget = dialog.getBudget();
             // In a real app, you would add the category to the data model
             JOptionPane.showMessageDialog(this, 
-                    "Adding new category: " + category + " with budget: $" + budget,
+                    "Adding new category: " + category + " with budget: "+currencySymbol + budget,
                     "Category Added", 
                     JOptionPane.INFORMATION_MESSAGE);
             
@@ -297,6 +314,8 @@ public class BudgetsPanel extends JPanel {
     }
     
     private void editCategory(String category) {
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+
         double currentBudget = financeData.getCategoryBudget(category);
         BudgetDialog dialog = new BudgetDialog(
                 SwingUtilities.getWindowAncestor(this), 
@@ -308,7 +327,7 @@ public class BudgetsPanel extends JPanel {
             double newBudget = dialog.getBudget();
             // In a real app, you would update the data model
             JOptionPane.showMessageDialog(this, 
-                    "Updating category: " + category + " with new budget: $" + newBudget,
+                    "Updating category: " + category + " with new budget: "+currencySymbol + newBudget,
                     "Category Updated", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
@@ -360,5 +379,19 @@ public class BudgetsPanel extends JPanel {
             shuffleAISuggestions();  // This gives the appearance of change for the demo
             updateUserCategoryPanels();
         }
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新面板
+        updateUserCategoryPanels();
+        updateAISuggestedPanels();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

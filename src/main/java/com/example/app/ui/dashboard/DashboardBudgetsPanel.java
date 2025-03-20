@@ -1,14 +1,18 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
 
-public class DashboardBudgetsPanel extends JPanel {
+public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener {
     private final FinanceData financeData;
     private final JPanel categoriesPanel;
+
+    String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
     
     public DashboardBudgetsPanel() {
         this.financeData = new FinanceData();
@@ -108,7 +112,7 @@ public class DashboardBudgetsPanel extends JPanel {
             // In a real app, you would add the category to the data model
             // For demo purposes, we're just showing the dialog
             JOptionPane.showMessageDialog(this, 
-                    "Adding new category: " + category + " with budget: $" + budget,
+                    "Adding new category: " + category + " with budget: " +currencySymbol + budget,
                     "Category Added", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
@@ -127,7 +131,7 @@ public class DashboardBudgetsPanel extends JPanel {
             // In a real app, you would update the data model
             // For demo purposes, we're just showing the dialog
             JOptionPane.showMessageDialog(this, 
-                    "Updating category: " + category + " with new budget: $" + newBudget,
+                    "Updating category: " + category + " with new budget: "+currencySymbol + newBudget,
                     "Category Updated", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
@@ -149,5 +153,21 @@ public class DashboardBudgetsPanel extends JPanel {
                     "Category Deleted", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        this.currencySymbol = currencySymbol;
+        categoriesPanel.removeAll();
+        updateCategoryPanels();
+        revalidate();
+        repaint();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

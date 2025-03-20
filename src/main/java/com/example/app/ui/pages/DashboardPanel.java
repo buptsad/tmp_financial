@@ -1,17 +1,18 @@
 package com.example.app.ui.pages;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.*;
 import com.formdev.flatlaf.ui.FlatButtonBorder;
 import javax.swing.*;
-import javax.swing.ButtonGroup;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
 
-public class DashboardPanel extends JPanel {
+public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     private JScrollPane contentScrollPane;
     private JPanel contentPanel;
     private CardLayout cardLayout;
@@ -118,6 +119,30 @@ public class DashboardPanel extends JPanel {
                 new EmptyBorder(5, 10, 5, 10)
             ));
         }
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
+    }
+    
+    private void createSummaryPanels() {
+        // 获取父容器
+        JPanel mainPanel = (JPanel) getComponent(0);
+        
+        // 移除旧的summaryPanel
+        Component[] components = mainPanel.getComponents();
+        for (Component component : components) {
+            if (component instanceof JPanel && component.getName() != null && 
+                    component.getName().equals("summaryPanel")) {
+                mainPanel.remove(component);
+                break;
+            }
+        }
+        
+        // 创建新的summaryPanel
+        JPanel summaryPanel = createSummaryPanel();
+        summaryPanel.setName("summaryPanel"); // 设置名称以便识别
+        mainPanel.add(summaryPanel, BorderLayout.NORTH);
+        
+        mainPanel.revalidate();
+        mainPanel.repaint();
     }
     
     private JPanel createSummaryPanel() {
@@ -125,6 +150,9 @@ public class DashboardPanel extends JPanel {
         
         // Get financial data
         FinanceData financeData = new FinanceData(); // This class provides financial data
+        
+        // 获取当前货币符号
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         
         // Create the four summary panels
         panel.add(createSummaryBox("Total Balance", financeData.getTotalBalance(), new Color(65, 105, 225)));
@@ -146,7 +174,9 @@ public class DashboardPanel extends JPanel {
         JLabel titleLabel = new JLabel(title);
         titleLabel.setForeground(accentColor);
         
-        JLabel amountLabel = new JLabel(String.format("$%.2f", amount));
+        // 使用CurrencyManager格式化金额
+        String formattedAmount = CurrencyManager.getInstance().formatCurrency(amount);
+        JLabel amountLabel = new JLabel(formattedAmount);
         amountLabel.setFont(new Font(amountLabel.getFont().getName(), Font.BOLD, 18));
         
         panel.add(titleLabel, BorderLayout.NORTH);
@@ -230,5 +260,18 @@ public class DashboardPanel extends JPanel {
         
         // Show selected panel
         cardLayout.show(contentPanel, panelName);
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新摘要面板
+        createSummaryPanels();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

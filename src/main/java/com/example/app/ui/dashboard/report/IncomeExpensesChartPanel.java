@@ -1,6 +1,8 @@
 package com.example.app.ui.dashboard.report;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
+import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -20,9 +22,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class IncomeExpensesChartPanel extends JPanel {
+public class IncomeExpensesChartPanel extends JPanel implements CurrencyChangeListener {
     
     private final FinanceData financeData = new FinanceData();
+    private ChartPanel chartPanel;
     
     public IncomeExpensesChartPanel() {
         setLayout(new BorderLayout());
@@ -32,22 +35,28 @@ public class IncomeExpensesChartPanel extends JPanel {
         
         // Create the chart
         JFreeChart chart = createChart();
-        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(600, 300));
         chartPanel.setMouseWheelEnabled(true);
         
         add(chartPanel, BorderLayout.CENTER);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private JFreeChart createChart() {
         // Create dataset for the chart
         TimeSeriesCollection dataset = createDataset();
         
+        // 获取当前货币符号
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        
         // Create the chart
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 "Income vs. Expenses (Last 30 Days)",
                 "Date",
-                "Amount ($)",
+                "Amount (" + currencySymbol + ")",
                 dataset,
                 true,  // Legend
                 true,  // Tooltips
@@ -114,5 +123,20 @@ public class IncomeExpensesChartPanel extends JPanel {
         dataset.addSeries(expensesSeries);
         
         return dataset;
+    }
+
+    @Override
+    public void onCurrencyChanged(String currencyCode, String currencySymbol) {
+        // 货币变化时刷新图表
+        JFreeChart chart = createChart();
+        chartPanel.setChart(chart);
+        chartPanel.repaint();
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // 移除组件时取消监听
+        CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

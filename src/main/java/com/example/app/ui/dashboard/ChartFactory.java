@@ -1,6 +1,7 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.ui.CurrencyManager;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -22,7 +23,7 @@ public class ChartFactory {
     public static JFreeChart createFinancialLineChart(FinanceData financeData) {
         // Create dataset
         TimeSeriesCollection dataset = new TimeSeriesCollection();
-        
+        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         // Add income series
         TimeSeries incomeSeries = new TimeSeries("Income");
         addDataToSeries(incomeSeries, financeData.getDates(), financeData.getDailyIncomes());
@@ -44,7 +45,7 @@ public class ChartFactory {
         
         // Create chart
         DateAxis domainAxis = new DateAxis("Date");
-        NumberAxis rangeAxis = new NumberAxis("Amount ($)");
+        NumberAxis rangeAxis = new NumberAxis("Amount (" + currencySymbol + ")");
         
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         
