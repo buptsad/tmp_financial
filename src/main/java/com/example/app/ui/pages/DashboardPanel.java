@@ -35,22 +35,24 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     
     public DashboardPanel() {
         setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        setBorder(new EmptyBorder(15, 15, 15, 15)); // Reduced border padding
         
         // Welcome section
         JLabel welcomeLabel = new JLabel("Welcome to Your Financial Dashboard");
         welcomeLabel.setFont(new Font(welcomeLabel.getFont().getName(), Font.BOLD, 22));
         add(welcomeLabel, BorderLayout.NORTH);
         
-        // Main container panel
-        JPanel mainPanel = new JPanel(new BorderLayout(0, 20));
-        mainPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
+        // Main container panel - use BoxLayout for vertical stacking with flexible sizing
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(new EmptyBorder(10, 0, 0, 0)); // Reduced top padding
         
-        summaryPanel = createSummaryPanel(); // Assign to the class-level field
-        mainPanel.add(summaryPanel, BorderLayout.NORTH);
+        summaryPanel = createSummaryPanel();
+        mainPanel.add(summaryPanel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Space between panels
         
-        // Container for buttons and content
-        JPanel contentContainer = new JPanel(new BorderLayout(0, 10));
+        // Create a panel to hold the buttons and content panel
+        JPanel contentContainer = new JPanel(new BorderLayout(0, 5)); // Reduced spacing
 
         // Sub-navigation buttons panel
         JPanel buttonsPanel = createButtonsPanel();
@@ -66,18 +68,25 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
         contentPanel.add(new DashboardBudgetsPanel(), BUDGETS_PANEL);
         contentPanel.add(new DashboardReportsPanel(), REPORTS_PANEL);
         
-        // Wrap contentPanel in a JScrollPane
+        // Wrap contentPanel in a JScrollPane with appropriate scroll policies
         contentScrollPane = new JScrollPane(contentPanel);
         contentScrollPane.setBorder(null);
         contentScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        contentScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        contentScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Allow horizontal scrolling when needed
+        contentScrollPane.getVerticalScrollBar().setUnitIncrement(16); // Smoother scrolling
         
         contentContainer.add(contentScrollPane, BorderLayout.CENTER);
         
-        // Add the content container to the main panel
-        mainPanel.add(contentContainer, BorderLayout.CENTER);
+        mainPanel.add(contentContainer);
         
-        add(mainPanel, BorderLayout.CENTER);
+        // Use a scroll pane for the entire dashboard to handle window resizing
+        JScrollPane mainScrollPane = new JScrollPane(mainPanel);
+        mainScrollPane.setBorder(null);
+        mainScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        mainScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        mainScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        add(mainScrollPane, BorderLayout.CENTER);
         
         // Set default view
         setActivePanel(OVERVIEW_PANEL);
@@ -146,19 +155,28 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     }
     
     private JPanel createSummaryPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 4, 15, 0));
+        // Use GridBagLayout for more flexible layout that adapts to window size
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        gbc.insets = new Insets(5, 5, 5, 5);
         
         // Get financial data
-        FinanceData financeData = new FinanceData(); // This class provides financial data
+        FinanceData financeData = new FinanceData();
         
-        // 获取当前货币符号
-        String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+        // Create the four summary panels with equal spacing
+        gbc.gridx = 0;
+        panel.add(createSummaryBox("Total Balance", financeData.getTotalBalance(), new Color(65, 105, 225)), gbc);
         
-        // Create the four summary panels
-        panel.add(createSummaryBox("Total Balance", financeData.getTotalBalance(), new Color(65, 105, 225)));
-        panel.add(createSummaryBox("Total Income", financeData.getTotalIncome(), new Color(46, 139, 87)));
-        panel.add(createSummaryBox("Total Expenses", financeData.getTotalExpenses(), new Color(178, 34, 34)));
-        panel.add(createSummaryBox("Total Savings", financeData.getTotalSavings(), new Color(218, 165, 32)));
+        gbc.gridx = 1;
+        panel.add(createSummaryBox("Total Income", financeData.getTotalIncome(), new Color(46, 139, 87)), gbc);
+        
+        gbc.gridx = 2;
+        panel.add(createSummaryBox("Total Expenses", financeData.getTotalExpenses(), new Color(178, 34, 34)), gbc);
+        
+        gbc.gridx = 3;
+        panel.add(createSummaryBox("Total Savings", financeData.getTotalSavings(), new Color(218, 165, 32)), gbc);
         
         return panel;
     }
@@ -168,13 +186,16 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
         panel.setLayout(new BorderLayout());
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(accentColor, 1),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+            BorderFactory.createEmptyBorder(10, 10, 10, 10) // Reduced padding
         ));
+        
+        // Set minimum and preferred sizes to help with scaling
+        panel.setMinimumSize(new Dimension(180, 80));
+        panel.setPreferredSize(new Dimension(220, 100));
         
         JLabel titleLabel = new JLabel(title);
         titleLabel.setForeground(accentColor);
         
-        // 使用CurrencyManager格式化金额
         String formattedAmount = CurrencyManager.getInstance().formatCurrency(amount);
         JLabel amountLabel = new JLabel(formattedAmount);
         amountLabel.setFont(new Font(amountLabel.getFont().getName(), Font.BOLD, 18));

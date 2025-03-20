@@ -34,7 +34,7 @@ public class MainFrame extends JFrame {
     public MainFrame() {
         setTitle("Finance Manager");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 700);
+        setSize(1360, 900);
         setLocationRelativeTo(null);
         
         JPanel mainPanel = new JPanel(new BorderLayout());
