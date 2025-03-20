@@ -8,11 +8,16 @@ import com.example.app.ui.CurrencyManager;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 
 public class SettingsPanel extends JPanel {
     private final CardLayout cardLayout;
     private final JPanel contentPanel;
     private JButton activeButton; // 当前选中的按钮
+    private Dimension originalWindowSize; // 保存原始窗口大小
 
     public SettingsPanel() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); // 主面板使用垂直 BoxLayout
@@ -65,21 +70,38 @@ public class SettingsPanel extends JPanel {
         cardLayout.show(contentPanel, "PROFILE");
         setActiveButton(profileButton); // 默认选中 Profile 按钮
         
-        // 当面板添加到容器中时调整窗口大小
-        addComponentListener(new ComponentAdapter() {
+        // 当面板显示时记录原始窗口大小并调整窗口
+        addHierarchyListener(new HierarchyListener() {
             @Override
-            public void componentShown(ComponentEvent e) {
-                SwingUtilities.invokeLater(() -> {
-                    Window window = SwingUtilities.getWindowAncestor(SettingsPanel.this);
-                    if (window != null) {
-                        window.setSize(600, 400); // 设置窗口大小
-                        window.setLocationRelativeTo(null); // 居中显示
+            public void hierarchyChanged(HierarchyEvent e) {
+                if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+                    if (isShowing()) {
+                        // 面板显示时
+                        SwingUtilities.invokeLater(() -> {
+                            Window window = SwingUtilities.getWindowAncestor(SettingsPanel.this);
+                            if (window != null) {
+                                // 保存原始窗口大小
+                                originalWindowSize = window.getSize();
+                                // 调整窗口大小
+                                window.setSize(700, 550);
+                                window.setLocationRelativeTo(null); // 居中显示
+                            }
+                        });
+                    } else {
+                        // 面板隐藏时恢复原始窗口大小
+                        SwingUtilities.invokeLater(() -> {
+                            Window window = SwingUtilities.getWindowAncestor(SettingsPanel.this);
+                            if (window != null && originalWindowSize != null) {
+                                window.setSize(originalWindowSize);
+                                window.setLocationRelativeTo(null); // 居中显示
+                            }
+                        });
                     }
-                });
+                }
             }
         });
     }
-
+    
     private JButton createNavButton(String text, String panelName) {
         JButton button = new JButton(text);
         button.setFocusPainted(false); // 移除焦点边框
