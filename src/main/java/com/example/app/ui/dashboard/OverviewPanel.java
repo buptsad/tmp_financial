@@ -8,11 +8,15 @@ import org.jfree.chart.JFreeChart;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.Map;
 
 public class OverviewPanel extends JPanel {
     private FinanceData financeData;
     private JPanel chartPanel;
     private FinancialDetailsPanel detailsPanel;
+    
+    // Budget warning threshold (80%)
+    private static final double BUDGET_WARNING_THRESHOLD = 90.0;
     
     // Static instance for access across the application
     public static FinancialAdvice sharedAdvice = new FinancialAdvice();
@@ -41,6 +45,9 @@ public class OverviewPanel extends JPanel {
         
         // Add the main content to the panel
         add(splitPane, BorderLayout.CENTER);
+        
+        // Check budget warnings after panel is initialized
+        SwingUtilities.invokeLater(this::showBudgetWarnings);
     }
     
     private JPanel createChartPanel() {
@@ -63,6 +70,48 @@ public class OverviewPanel extends JPanel {
         panel.add(chartPanel, BorderLayout.CENTER);
         
         return panel;
+    }
+    
+    // Method to show budget warnings
+    private void showBudgetWarnings() {
+        StringBuilder warningMessage = new StringBuilder("<html><body>");
+        boolean hasWarnings = false;
+        
+        // Check overall budget
+        double overallPercentage = financeData.getOverallBudgetPercentage();
+        if (overallPercentage >= BUDGET_WARNING_THRESHOLD) {
+            warningMessage.append("<p style='color:#e74c3c'><b>Overall budget:</b> ")
+                          .append(String.format("%.1f%%", overallPercentage))
+                          .append(" used</p>");
+            hasWarnings = true;
+        }
+        
+        // Check category budgets
+        Map<String, Double> categoryBudgets = financeData.getCategoryBudgets();
+        for (String category : categoryBudgets.keySet()) {
+            double percentage = financeData.getCategoryPercentage(category);
+            if (percentage >= BUDGET_WARNING_THRESHOLD) {
+                warningMessage.append("<p style='color:#e74c3c'><b>")
+                              .append(category)
+                              .append(":</b> ")
+                              .append(String.format("%.1f%%", percentage))
+                              .append(" used</p>");
+                hasWarnings = true;
+            }
+        }
+        
+        warningMessage.append("</body></html>");
+        
+        // Show warning dialog if any budget is running out
+        if (hasWarnings) {
+            JOptionPane optionPane = new JOptionPane(
+                warningMessage.toString(),
+                JOptionPane.WARNING_MESSAGE
+            );
+            JDialog dialog = optionPane.createDialog(this, "Budget Alert");
+            // Using the default warning icon from JOptionPane
+            dialog.setVisible(true);
+        }
     }
     
     // Method to update the advice display

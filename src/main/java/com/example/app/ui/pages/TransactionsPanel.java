@@ -4,6 +4,7 @@ import com.example.app.model.FinanceData;
 import com.example.app.ui.dialogs.CSVImportDialog;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -98,7 +99,7 @@ public class TransactionsPanel extends JPanel {
             
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 4; // Only the delete checkbox is editable
+                return column != 4 || tableModel.getValueAt(row, 4) instanceof Boolean; // Make all columns editable except checkbox column
             }
         };
         
@@ -112,6 +113,13 @@ public class TransactionsPanel extends JPanel {
         transactionsTable.setShowGrid(true);
         transactionsTable.setGridColor(Color.LIGHT_GRAY);
         
+        // Add table cell edit listener to track changes
+        tableModel.addTableModelListener(e -> {
+            if (e.getType() == TableModelEvent.UPDATE) {
+                setHasUnsavedChanges(true);
+            }
+        });
+
         // Set column widths
         transactionsTable.getColumnModel().getColumn(0).setPreferredWidth(100); // Date
         transactionsTable.getColumnModel().getColumn(1).setPreferredWidth(200); // Description
@@ -329,10 +337,28 @@ public class TransactionsPanel extends JPanel {
     }
     
     private void saveChanges() {
-        // Here you would typically save to a database
+        // In a real application, you would save to a database or file
+        // For this demonstration, we'll just show the changes that would be saved
+        
+        StringBuilder savedChanges = new StringBuilder("Changes saved:\n\n");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        // Collect all table data that would be saved
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            String date = tableModel.getValueAt(i, 0).toString();
+            String description = tableModel.getValueAt(i, 1).toString();
+            String category = tableModel.getValueAt(i, 2).toString();
+            Double amount = (Double) tableModel.getValueAt(i, 3);
+            
+            savedChanges.append(String.format("Row %d: %s | %s | %s | %.2f\n", 
+                i+1, date, description, category, amount));
+        }
+        
+        // Here you would typically save to a database or update financeData
+        
         JOptionPane.showMessageDialog(this, 
-                "Changes saved successfully!", 
-                "Save Changes", JOptionPane.INFORMATION_MESSAGE);
+                "Changes Saved", 
+                "Changes Saved", JOptionPane.INFORMATION_MESSAGE);
         
         setHasUnsavedChanges(false);
     }
