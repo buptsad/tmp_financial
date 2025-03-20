@@ -1,6 +1,7 @@
 package com.example.app.ui.dashboard;
 
 import com.example.app.model.FinanceData;
+import com.example.app.model.FinancialAdvice;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
@@ -11,13 +12,17 @@ import java.awt.*;
 public class OverviewPanel extends JPanel {
     private FinanceData financeData;
     private JPanel chartPanel;
+    private FinancialDetailsPanel detailsPanel;
+    
+    // Static instance for access across the application
+    public static FinancialAdvice sharedAdvice = new FinancialAdvice();
     
     public OverviewPanel() {
         // Initialize data model
         financeData = new FinanceData();
         
         // Set up panel
-        setLayout(new BorderLayout(15, 0));
+        setLayout(new BorderLayout(15, 15));
         setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
         
         // Create a split panel
@@ -30,18 +35,18 @@ public class OverviewPanel extends JPanel {
         chartPanel = createChartPanel();
         splitPane.setLeftComponent(chartPanel);
         
-        // Create the right panel for additional details
-        FinancialDetailsPanel detailsPanel = new FinancialDetailsPanel(financeData);
+        // Create the right panel for additional details and advice
+        detailsPanel = new FinancialDetailsPanel(financeData, sharedAdvice);
         splitPane.setRightComponent(detailsPanel);
         
-        // Add to main panel
+        // Add the main content to the panel
         add(splitPane, BorderLayout.CENTER);
     }
     
     private JPanel createChartPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+            BorderFactory.createLineBorder(UIManager.getColor("Component.borderColor")),
             new EmptyBorder(15, 15, 15, 15)
         ));
         
@@ -58,5 +63,12 @@ public class OverviewPanel extends JPanel {
         panel.add(chartPanel, BorderLayout.CENTER);
         
         return panel;
+    }
+    
+    // Method to update the advice display
+    public void updateAdviceDisplay() {
+        if (detailsPanel != null) {
+            detailsPanel.updateAdviceDisplay();
+        }
     }
 }

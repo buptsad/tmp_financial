@@ -68,7 +68,7 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\Mini_project_test-1.0-SNAPSHOT.jar;%APP_HOME%\lib\flatlaf-intellij-themes-3.5.jar;%APP_HOME%\lib\flatlaf-3.5.jar;%APP_HOME%\lib\jfreechart-1.5.4.jar;%APP_HOME%\lib\json-20250107.jar
+set CLASSPATH=%APP_HOME%\lib\Mini_project_test-1.0-SNAPSHOT.jar;%APP_HOME%\lib\flatlaf-intellij-themes-3.5.jar;%APP_HOME%\lib\flatlaf-3.5.jar;%APP_HOME%\lib\jfreechart-1.5.4.jar;%APP_HOME%\lib\hutool-all-5.8.16.jar;%APP_HOME%\lib\json-20250107.jar
 
 
 @rem Execute Mini_project_test
