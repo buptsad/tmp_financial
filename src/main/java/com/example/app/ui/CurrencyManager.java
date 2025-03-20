@@ -2,6 +2,7 @@ package com.example.app.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 管理应用程序中的货币设置并通知监听器货币变化
@@ -16,8 +17,8 @@ public class CurrencyManager {
     // 当前货币编码 (默认为USD)
     private String currencyCode = "USD";
     
-    // 监听器列表
-    private List<CurrencyChangeListener> listeners = new ArrayList<>();
+    // 监听器列表 - 使用线程安全的CopyOnWriteArrayList
+    private List<CurrencyChangeListener> listeners = new CopyOnWriteArrayList<>();
     
     // 私有构造函数
     private CurrencyManager() {}
@@ -80,8 +81,15 @@ public class CurrencyManager {
      * 通知所有监听器货币已变化
      */
     private void notifyListeners() {
+        // 使用CopyOnWriteArrayList可以安全地遍历，即使在遍历期间有修改
         for (CurrencyChangeListener listener : listeners) {
-            listener.onCurrencyChanged(currencyCode, currencySymbol);
+            try {
+                listener.onCurrencyChanged(currencyCode, currencySymbol);
+            } catch (Exception e) {
+                // 捕获通知过程中的异常，防止一个监听器的异常影响其他监听器
+                System.err.println("Error notifying listener: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
     
@@ -98,5 +106,4 @@ public class CurrencyManager {
     public interface CurrencyChangeListener {
         void onCurrencyChanged(String currencyCode, String currencySymbol);
     }
-
 }

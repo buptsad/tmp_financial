@@ -15,6 +15,7 @@ import java.util.Enumeration;
 public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     private JScrollPane contentScrollPane;
     private JPanel contentPanel;
+    private JPanel summaryPanel; // Declare summaryPanel as a class-level field
     private CardLayout cardLayout;
     private JButton overviewButton;
     private JButton transactionsButton;
@@ -45,13 +46,12 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
         JPanel mainPanel = new JPanel(new BorderLayout(0, 20));
         mainPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
         
-        // Financial summary panel
-        JPanel summaryPanel = createSummaryPanel();
+        summaryPanel = createSummaryPanel(); // Assign to the class-level field
         mainPanel.add(summaryPanel, BorderLayout.NORTH);
         
         // Container for buttons and content
         JPanel contentContainer = new JPanel(new BorderLayout(0, 10));
-        
+
         // Sub-navigation buttons panel
         JPanel buttonsPanel = createButtonsPanel();
         contentContainer.add(buttonsPanel, BorderLayout.NORTH);
@@ -264,8 +264,35 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
 
     @Override
     public void onCurrencyChanged(String currencyCode, String currencySymbol) {
-        // 货币变化时刷新摘要面板
-        createSummaryPanels();
+        // 当货币变化时，重新创建摘要面板
+        try {
+            // 获取摘要面板的父容器
+            Container parent = summaryPanel.getParent();
+            if (parent != null) {
+                // 从父容器中移除旧的摘要面板
+                parent.remove(summaryPanel);
+                
+                // 创建新的摘要面板
+                summaryPanel = createSummaryPanel();
+                
+                // 将新的摘要面板添加到父容器
+                if (parent instanceof JPanel) {
+                    JPanel parentPanel = (JPanel) parent;
+                    if (parentPanel.getLayout() instanceof BorderLayout) {
+                        parentPanel.add(summaryPanel, BorderLayout.NORTH);
+                    } else {
+                        parentPanel.add(summaryPanel);
+                    }
+                }
+                
+                // 重新验证和重绘
+                parent.revalidate();
+                parent.repaint();
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating summary panels: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     @Override
