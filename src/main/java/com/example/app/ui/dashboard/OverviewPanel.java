@@ -57,17 +57,10 @@ public class OverviewPanel extends JPanel {
             new EmptyBorder(15, 15, 15, 15)
         ));
         
-        // Create chart
-        JFreeChart chart = ChartFactory.createFinancialLineChart(financeData);
+        // 使用ChartFactory实例而非静态方法
+        ChartFactory chartFactory = new ChartFactory(financeData);
         
-        // Create chart panel with chart
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new Dimension(600, 400));
-        chartPanel.setMouseWheelEnabled(true);
-        chartPanel.setDomainZoomable(true);
-        chartPanel.setRangeZoomable(true);
-        
-        panel.add(chartPanel, BorderLayout.CENTER);
+        panel.add(chartFactory, BorderLayout.CENTER);
         
         return panel;
     }
