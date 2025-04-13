@@ -78,7 +78,7 @@ public class CSVImportDialog extends JDialog {
         JPanel bottomPanel = createButtonPanel();
         add(bottomPanel, BorderLayout.SOUTH);
     }
-    
+
     private JPanel createFileSelectionPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
