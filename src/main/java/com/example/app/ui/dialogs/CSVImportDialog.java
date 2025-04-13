@@ -1,6 +1,7 @@
 package com.example.app.ui.dialogs;
 
 import com.example.app.ui.pages.TransactionsPanel;
+import com.example.app.user_data.UserBillStorage;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -644,12 +645,21 @@ public class CSVImportDialog extends JDialog {
             transactions.add(transaction);
         }
         
+        // 使用UserBillStorage保存交易记录
+        boolean saveSuccess = UserBillStorage.addTransactions(transactions);
+        
+        if (!saveSuccess) {
+            JOptionPane.showMessageDialog(this, 
+                "There was an error saving transactions to storage.", 
+                "Save Error", JOptionPane.ERROR_MESSAGE);
+        }
+        
         // Import the transactions into the main panel
         parentPanel.addTransactionsFromCSV(transactions);
         
         // Show success message
         JOptionPane.showMessageDialog(this, 
-            transactions.size() + " transactions imported successfully.", 
+            transactions.size() + " transactions imported successfully and saved to user_bill.", 
             "Import Complete", JOptionPane.INFORMATION_MESSAGE);
         
         // Close the dialog
@@ -667,19 +677,19 @@ public class CSVImportDialog extends JDialog {
                     dateFormatCombo.setSelectedItem("yyyy-MM-dd HH:mm:ss");
                     
                     // Column mappings
-                    setComboBoxItem(dateColumnCombo, "交易时间");
-                    setComboBoxItem(descriptionColumnCombo, "商品");
+                    setComboBoxItem(dateColumnCombo, "Transaction Time");
+                    setComboBoxItem(descriptionColumnCombo, "Product");
                     categoryColumnCombo.setSelectedIndex(0); // Default/empty
-                    setComboBoxItem(amountColumnCombo, "金额(元)");
+                    setComboBoxItem(amountColumnCombo, "Amount");
                     
                     // Transaction type settings
                     useTypeColumnCheckBox.setSelected(true);
-                    setComboBoxItem(typeColumnCombo, "收/支");
+                    setComboBoxItem(typeColumnCombo, "Income/Expense");
                     typeColumnCombo.setEnabled(true);
                     
                     // Set identifiers
-                    incomeIdentifierField.setText("收入");
-                    expenseIdentifierField.setText("支出");
+                    incomeIdentifierField.setText("Income");
+                    expenseIdentifierField.setText("Expense");
                     incomeIdentifierField.setEnabled(true);
                     expenseIdentifierField.setEnabled(true);
                     break;

@@ -2,6 +2,7 @@ package com.example.app.ui.pages;
 
 import com.example.app.model.FinanceData;
 import com.example.app.ui.dialogs.CSVImportDialog;
+import com.example.app.user_data.UserBillStorage;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -49,6 +50,9 @@ public class TransactionsPanel extends JPanel {
         // Create bottom panel with buttons
         JPanel bottomPanel = createButtonPanel();
         add(bottomPanel, BorderLayout.SOUTH);
+
+        // Load saved transactions
+        loadSavedTransactions();
     }
     
     private JPanel createSearchFilterPanel() {
@@ -375,5 +379,12 @@ public class TransactionsPanel extends JPanel {
         this.hasUnsavedChanges = hasChanges;
         saveButton.setEnabled(hasChanges);
         cancelButton.setEnabled(hasChanges);
+    }
+
+    private void loadSavedTransactions() {
+        List<Object[]> savedTransactions = UserBillStorage.loadTransactions();
+        if (!savedTransactions.isEmpty()) {
+            addTransactionsFromCSV(savedTransactions);
+        }
     }
 }
