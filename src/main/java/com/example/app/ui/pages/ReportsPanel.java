@@ -58,7 +58,7 @@ public class ReportsPanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
     }
-    
+
     private JPanel createHeaderPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Financial Reports");

@@ -223,7 +223,7 @@ public class TransactionsPanel extends JPanel {
     }
     
     private void openCSVImportDialog() {
-        CSVImportDialog dialog = new CSVImportDialog(SwingUtilities.getWindowAncestor(this), this);
+        CSVImportDialog dialog = new CSVImportDialog(SwingUtilities.getWindowAncestor(this), this, financeData);
         dialog.setVisible(true);
     }
 

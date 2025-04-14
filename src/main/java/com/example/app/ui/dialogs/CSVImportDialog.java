@@ -2,6 +2,7 @@ package com.example.app.ui.dialogs;
 
 import com.example.app.ui.pages.TransactionsPanel;
 import com.example.app.user_data.UserBillStorage;
+import com.example.app.model.FinanceData; // 添加导入
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -48,9 +50,13 @@ public class CSVImportDialog extends JDialog {
     private JComboBox<String> templateComboBox;
     private boolean applyingTemplate = false; // Flag to prevent resetting when applying template
     
-    public CSVImportDialog(Window owner, TransactionsPanel parentPanel) {
+    // 添加对FinanceData的引用
+    private FinanceData financeData;
+    
+    public CSVImportDialog(Window owner, TransactionsPanel parentPanel, FinanceData financeData) {
         super(owner, "Import Transactions from CSV", ModalityType.APPLICATION_MODAL);
         this.parentPanel = parentPanel;
+        this.financeData = financeData; // 保存对FinanceData的引用
         
         setSize(800, 600);
         setLocationRelativeTo(owner);
@@ -149,13 +155,14 @@ public class CSVImportDialog extends JDialog {
         dateColumnCombo = new JComboBox<>();
         mappingGrid.add(dateColumnCombo);
         
-        // Date format
+        // Date format - 添加更多日期格式选项，包括带斜杠的格式
         mappingGrid.add(new JLabel("Date/Time Format:"));
         dateFormatCombo = new JComboBox<>(new String[] {
-            "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss",
-            "MM/dd/yyyy", "MM/dd/yyyy HH:mm:ss", 
-            "dd/MM/yyyy", "dd/MM/yyyy HH:mm:ss",
-            "MM-dd-yyyy", "MM-dd-yyyy HH:mm:ss",
+            "yyyy-MM-dd", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss",
+            "yyyy/MM/dd", "yyyy/MM/dd HH:mm", "yyyy/MM/dd HH:mm:ss", 
+            "MM/dd/yyyy", "MM/dd/yyyy HH:mm", "MM/dd/yyyy HH:mm:ss", 
+            "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "dd/MM/yyyy HH:mm:ss",
+            "MM-dd-yyyy", "MM-dd-yyyy HH:mm", "MM-dd-yyyy HH:mm:ss",
             "dd-MM-yyyy", "dd-MM-yyyy HH:mm:ss"
         });
         dateFormatCombo.setEditable(true);
@@ -461,8 +468,7 @@ public class CSVImportDialog extends JDialog {
             String formattedDate = dateStr;
             try {
                 if (!dateStr.isEmpty()) {
-                    LocalDate date = LocalDate.parse(dateStr, formatter);
-                    formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    formattedDate = parseDate(dateStr, dateFormat);
                 }
             } catch (DateTimeParseException e) {
                 // Keep original string if parsing fails
@@ -591,8 +597,12 @@ public class CSVImportDialog extends JDialog {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
         
         List<Object[]> transactions = new ArrayList<>();
+        int skippedRows = 0;
+        StringBuilder errorMessages = new StringBuilder();
         
-        for (List<String> rowData : csvData) {
+        for (int rowIndex = 0; rowIndex < csvData.size(); rowIndex++) {
+            List<String> rowData = csvData.get(rowIndex);
+            
             String dateStr = (dateColIdx >= 0 && dateColIdx < rowData.size()) ? 
                              rowData.get(dateColIdx) : "";
             String description = (descColIdx >= 0 && descColIdx < rowData.size()) ? 
@@ -606,11 +616,19 @@ public class CSVImportDialog extends JDialog {
             String formattedDate = "";
             try {
                 if (!dateStr.isEmpty()) {
-                    LocalDate date = LocalDate.parse(dateStr, formatter);
-                    formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    formattedDate = parseDate(dateStr, dateFormat);
+                } else {
+                    errorMessages.append("Row ").append(rowIndex + 1).append(": Empty date field\n");
+                    skippedRows++;
+                    continue;
                 }
             } catch (DateTimeParseException e) {
-                // Skip this row if date parsing fails
+                // 记录错误并跳过解析失败的行
+                errorMessages.append("Row ").append(rowIndex + 1)
+                              .append(": Failed to parse date '").append(dateStr)
+                              .append("' using format '").append(dateFormat).append("' - ")
+                              .append(e.getMessage()).append("\n");
+                skippedRows++;
                 continue;
             }
             
@@ -619,6 +637,11 @@ public class CSVImportDialog extends JDialog {
             try {
                 // Remove any currency symbols and commas
                 String cleanAmount = amountStr.replaceAll("[^\\d.-]", "");
+                if (cleanAmount.isEmpty()) {
+                    errorMessages.append("Row ").append(rowIndex + 1).append(": Empty amount field\n");
+                    skippedRows++;
+                    continue;
+                }
                 amount = Double.parseDouble(cleanAmount);
                 
                 // Apply transaction type if enabled
@@ -632,17 +655,49 @@ public class CSVImportDialog extends JDialog {
                     // Check if this is income based on identifiers
                     else if (matchesAnyIdentifier(typeValue, incomeIdentifiers)) {
                         amount = Math.abs(amount); // Make positive
+                    } else {
+                        // Neither income nor expense identifier matched
+                        errorMessages.append("Row ").append(rowIndex + 1)
+                                  .append(": Could not determine transaction type from '")
+                                  .append(typeValue).append("'\n");
                     }
-                    // If no match, keep as is
                 }
             } catch (NumberFormatException e) {
-                // Skip this row if amount parsing fails
+                // Log error and skip row if amount parsing fails
+                errorMessages.append("Row ").append(rowIndex + 1)
+                              .append(": Failed to parse amount '").append(amountStr).append("'\n");
+                skippedRows++;
                 continue;
             }
             
             // Create transaction row
             Object[] transaction = {formattedDate, description, category, amount, false};
             transactions.add(transaction);
+        }
+        
+        // Display warning if some rows were skipped
+        if (skippedRows > 0) {
+            String message = "Warning: " + skippedRows + " of " + csvData.size() + 
+                             " rows were skipped due to parsing errors.\n\n";
+            if (errorMessages.length() > 0) {
+                // Limit the number of error messages to avoid huge dialog
+                String errors = errorMessages.toString();
+                if (errors.length() > 500) {
+                    errors = errors.substring(0, 500) + "...\n(more errors not shown)";
+                }
+                message += "Errors:\n" + errors;
+            }
+            
+            JOptionPane.showMessageDialog(this, message, 
+                "Import Warning", JOptionPane.WARNING_MESSAGE);
+        }
+        
+        // Check if we have any transactions to save
+        if (transactions.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "No valid transactions found to import. Please check your CSV data and column mappings.", 
+                "Import Failed", JOptionPane.ERROR_MESSAGE);
+            return;
         }
         
         // 使用UserBillStorage保存交易记录
@@ -654,12 +709,15 @@ public class CSVImportDialog extends JDialog {
                 "Save Error", JOptionPane.ERROR_MESSAGE);
         }
         
+        // 将导入的交易数据添加到FinanceData中
+        financeData.importTransactions(transactions);
+        
         // Import the transactions into the main panel
         parentPanel.addTransactionsFromCSV(transactions);
         
         // Show success message
         JOptionPane.showMessageDialog(this, 
-            transactions.size() + " transactions imported successfully and saved to user_bill.", 
+            transactions.size() + " transactions imported successfully and saved to user_bill.csv", 
             "Import Complete", JOptionPane.INFORMATION_MESSAGE);
         
         // Close the dialog
@@ -674,7 +732,7 @@ public class CSVImportDialog extends JDialog {
             switch (templateName) {
                 case "WeChat Pay":
                     // Date settings
-                    dateFormatCombo.setSelectedItem("yyyy-MM-dd HH:mm:ss");
+                    dateFormatCombo.setSelectedItem("yyyy/M/d HH:mm"); // 修改为适应 2025/4/14 12:19 的格式
                     
                     // Column mappings
                     setComboBoxItem(dateColumnCombo, "Transaction Time");
@@ -739,5 +797,59 @@ public class CSVImportDialog extends JDialog {
         }
         
         // If still not found, leave as is
+    }
+
+    private String parseDate(String dateStr, String primaryFormat) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return "";
+        }
+
+        // 尝试使用主要格式解析
+        try {
+            return parseDateWithFormat(dateStr, primaryFormat);
+        } catch (DateTimeParseException e) {
+            // 尝试其他可能的格式
+            String[] formatsToTry = {
+                // 带连字符的格式
+                "yyyy-MM-dd", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm:ss",
+                // 带斜杠的格式
+                "yyyy/MM/dd", "yyyy/M/d HH:mm", "yyyy/M/d HH:mm:ss",
+                "yyyy/MM/dd", "yyyy/MM/dd HH:mm", "yyyy/MM/dd HH:mm:ss",
+                // 美式格式
+                "MM/dd/yyyy", "MM/dd/yyyy HH:mm", "MM/dd/yyyy HH:mm:ss",
+                // 欧式格式
+                "dd/MM/yyyy", "dd/MM/yyyy HH:mm", "dd/MM/yyyy HH:mm:ss",
+                // 其他常见格式
+                "yyyy.MM.dd", "dd.MM.yyyy", "MM.dd.yyyy"
+            };
+            
+            for (String format : formatsToTry) {
+                if (format.equals(primaryFormat)) continue; // 已经尝试过的格式跳过
+                
+                try {
+                    return parseDateWithFormat(dateStr, format);
+                } catch (DateTimeParseException ignored) {
+                    // 继续尝试下一个格式
+                }
+            }
+            
+            // 所有格式都失败，抛出原始异常
+            throw e;
+        }
+    }
+
+    private String parseDateWithFormat(String dateStr, String format) throws DateTimeParseException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDate date;
+        
+        if (format.contains("HH:mm") || format.contains("HH:mm:ss")) {
+            // 如果是日期时间格式，先解析为LocalDateTime再转换为LocalDate
+            date = LocalDateTime.parse(dateStr, formatter).toLocalDate();
+        } else {
+            // 纯日期格式
+            date = LocalDate.parse(dateStr, formatter);
+        }
+        
+        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 }

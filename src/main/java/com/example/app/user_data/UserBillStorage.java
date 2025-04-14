@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 存储用户账单数据
@@ -11,8 +13,13 @@ import java.util.logging.Logger;
  */
 public class UserBillStorage {
     private static final Logger LOGGER = Logger.getLogger(UserBillStorage.class.getName());
-    private static final String BILL_FILENAME = "user_bill.dat";
+    private static final String BILL_FILENAME = "user_bill.csv";
     private static File billFile;
+    
+    // 定义CSV格式
+    private static final String CSV_HEADER = "Date,Description,Category,Amount,Confirmed";
+    private static final String CSV_FORMAT = "%s,%s,%s,%.2f,%b";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
     static {
         // 直接使用项目内的文件路径
@@ -32,9 +39,9 @@ public class UserBillStorage {
         // 创建目录(如果不存在)
         if (!directory.exists()) {
             if (directory.mkdirs()) {
-                LOGGER.log(Level.INFO, "创建账单目录在: {0}", directory.getAbsolutePath());
+                LOGGER.log(Level.INFO, "Created bill directory at: {0}", directory.getAbsolutePath());
             } else {
-                LOGGER.log(Level.SEVERE, "无法创建账单目录在: {0}", directory.getAbsolutePath());
+                LOGGER.log(Level.SEVERE, "Could not create bill directory at: {0}", directory.getAbsolutePath());
                 return;
             }
         }
@@ -43,18 +50,22 @@ public class UserBillStorage {
         if (!billFile.exists()) {
             try {
                 if (billFile.createNewFile()) {
-                    LOGGER.log(Level.INFO, "创建账单文件在: {0}", billFile.getAbsolutePath());
+                    LOGGER.log(Level.INFO, "Created bill file at: {0}", billFile.getAbsolutePath());
                     
-                    // 初始化一个空列表作为默认内容
-                    saveTransactions(new ArrayList<>());
+                    // 初始化CSV文件，添加表头
+                    try (PrintWriter writer = new PrintWriter(new FileWriter(billFile))) {
+                        writer.println(CSV_HEADER);
+                    }
+                    
+                    LOGGER.log(Level.INFO, "Initialized CSV file header");
                 } else {
-                    LOGGER.log(Level.SEVERE, "无法创建账单文件在: {0}", billFile.getAbsolutePath());
+                    LOGGER.log(Level.SEVERE, "Could not create bill file at: {0}", billFile.getAbsolutePath());
                 }
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "创建账单文件时出错", e);
+                LOGGER.log(Level.SEVERE, "Error creating bill file", e);
             }
         } else {
-            LOGGER.log(Level.INFO, "账单文件已存在于: {0}", billFile.getAbsolutePath());
+            LOGGER.log(Level.INFO, "Bill file already exists at: {0}", billFile.getAbsolutePath());
         }
     }
     
@@ -67,43 +78,126 @@ public class UserBillStorage {
     }
     
     /**
-     * 从文件加载交易记录
-     * @return 交易记录的列表，如果加载失败返回null
+     * 从CSV文件加载交易记录
+     * @return 交易记录的列表
      */
-    @SuppressWarnings("unchecked")
     public static List<Object[]> loadTransactions() {
+        List<Object[]> transactions = new ArrayList<>();
+        
         // 确认文件存在
         if (!billFile.exists()) {
-            LOGGER.log(Level.WARNING, "账单文件不存在: {0}", billFile.getAbsolutePath());
-            return new ArrayList<>();
+            LOGGER.log(Level.WARNING, "Bill file does not exist: {0}", billFile.getAbsolutePath());
+            return transactions;
         }
         
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(billFile))) {
-            List<Object[]> transactions = (List<Object[]>) ois.readObject();
-            LOGGER.log(Level.INFO, "成功从以下位置加载交易记录: {0}", billFile.getAbsolutePath());
-            LOGGER.log(Level.INFO, "加载了 {0} 条交易记录", transactions.size());
-            return transactions;
-        } catch (IOException | ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "从文件加载交易记录时出错: " + e.getMessage(), e);
-            return new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(billFile))) {
+            String line;
+            boolean isFirstLine = true;
+            
+            while ((line = reader.readLine()) != null) {
+                // 跳过表头行
+                if (isFirstLine) {
+                    isFirstLine = false;
+                    continue;
+                }
+                
+                // 处理CSV行，注意处理可能包含逗号的字段
+                String[] parts = parseCSVLine(line);
+                if (parts.length >= 5) {
+                    try {
+                        String dateStr = parts[0];
+                        String description = parts[1];
+                        String category = parts[2];
+                        double amount = Double.parseDouble(parts[3]);
+                        boolean confirmed = Boolean.parseBoolean(parts[4]);
+                        
+                        Object[] transaction = {dateStr, description, category, amount, confirmed};
+                        transactions.add(transaction);
+                    } catch (NumberFormatException e) {
+                        LOGGER.log(Level.WARNING, "Error parsing transaction: " + line, e);
+                    }
+                }
+            }
+            
+            LOGGER.log(Level.INFO, "Successfully loaded transactions from: {0}", billFile.getAbsolutePath());
+            LOGGER.log(Level.INFO, "Loaded {0} transactions", transactions.size());
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error loading transactions from file: " + e.getMessage(), e);
         }
+        
+        return transactions;
     }
     
     /**
-     * 将交易记录保存到文件
+     * 解析一行CSV数据，处理引号内可能包含逗号的情况
+     */
+    private static String[] parseCSVLine(String line) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+        
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                result.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        
+        // 添加最后一个字段
+        result.add(current.toString());
+        
+        return result.toArray(new String[0]);
+    }
+    
+    /**
+     * 将交易记录保存到CSV文件
      * @param transactions 要保存的交易记录列表
      * @return 如果成功则返回true，否则返回false
      */
     public static boolean saveTransactions(List<Object[]> transactions) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(billFile))) {
-            oos.writeObject(transactions);
-            LOGGER.log(Level.INFO, "成功将 {0} 条交易记录保存到: {1}", 
+        try (PrintWriter writer = new PrintWriter(new FileWriter(billFile))) {
+            // 写入CSV表头
+            writer.println(CSV_HEADER);
+            
+            // 写入每一条交易记录
+            for (Object[] transaction : transactions) {
+                String dateStr = (String) transaction[0];
+                String description = escapeCSV((String) transaction[1]);
+                String category = escapeCSV((String) transaction[2]);
+                double amount = (Double) transaction[3];
+                boolean confirmed = transaction.length > 4 ? (Boolean) transaction[4] : false;
+                
+                writer.println(String.format(CSV_FORMAT, dateStr, description, category, amount, confirmed));
+            }
+            
+            LOGGER.log(Level.INFO, "Successfully saved {0} transactions to: {1}", 
                     new Object[]{transactions.size(), billFile.getAbsolutePath()});
             return true;
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "保存交易记录到文件时出错: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "Error saving transactions to file: " + e.getMessage(), e);
             return false;
         }
+    }
+    
+    /**
+     * 转义CSV字段中的特殊字符
+     */
+    private static String escapeCSV(String field) {
+        if (field == null) {
+            return "";
+        }
+        
+        // 如果字段包含逗号、引号或换行符，则用双引号包围并将内部引号替换为两个引号
+        if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
     }
     
     /**

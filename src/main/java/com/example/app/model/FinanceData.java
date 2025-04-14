@@ -1,6 +1,7 @@
 package com.example.app.model;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class FinanceData {
@@ -18,29 +19,27 @@ public class FinanceData {
     // Expenses by category
     private Map<String, Double> categoryExpenses;
     
-    // Sample transaction descriptions
-    private String[] expenseDescriptions;
-    private String[] incomeDescriptions;
-    
     // Maps to store consistent transaction descriptions for each date
     private Map<LocalDate, String> dailyExpenseDescriptions;
     private Map<LocalDate, String> dailyIncomeDescriptions;
     private Map<LocalDate, String> dailyExpenseCategories;
     
+    // List to store all transactions
+    private List<Transaction> transactions;
+    
     public FinanceData() {
-        // Initialize data
-        initializeTransactionDescriptions();
-        initializeData();
+        // Initialize data structures
+        initializeEmptyData();
     }
     
-    private void initializeData() {
-        // Create sample data for the past 30 days
-        LocalDate today = LocalDate.now();
+    private void initializeEmptyData() {
+        // Initialize empty data structures
         dailyIncomes = new HashMap<>();
         dailyExpenses = new HashMap<>();
         dailyExpenseDescriptions = new HashMap<>();
         dailyIncomeDescriptions = new HashMap<>();
         dailyExpenseCategories = new HashMap<>();
+        transactions = new ArrayList<>();
         
         // Initialize category budgets
         categoryBudgets = new LinkedHashMap<>();
@@ -52,71 +51,60 @@ public class FinanceData {
         categoryBudgets.put("Healthcare", 300.00);
         categoryBudgets.put("Other", 500.00);
         
-        // Initialize category expenses
+        // Initialize category expenses with zeros
         categoryExpenses = new LinkedHashMap<>();
-        categoryExpenses.put("Housing", 1350.00);
-        categoryExpenses.put("Food", 720.00);
-        categoryExpenses.put("Transportation", 315.00);
-        categoryExpenses.put("Utilities", 285.00);
-        categoryExpenses.put("Entertainment", 310.00);  // Over budget
-        categoryExpenses.put("Healthcare", 175.00);
-        categoryExpenses.put("Other", 420.00);
-        
-        // Create a list of categories for random selection
-        List<String> categoryList = new ArrayList<>(categoryExpenses.keySet());
-        Random random = new Random(42); // Use fixed seed for reproducibility
-        
-        // Generate some sample data
-        for (int i = 29; i >= 0; i--) {
-            LocalDate date = today.minusDays(i);
+        categoryBudgets.keySet().forEach(category -> categoryExpenses.put(category, 0.0));
+    }
+    
+    // Method to import transactions from CSV
+    public void importTransactions(List<Object[]> importedTransactions) {
+        for (Object[] transaction : importedTransactions) {
+            String dateStr = (String) transaction[0];
+            String description = (String) transaction[1];
+            String category = (String) transaction[2];
+            double amount = (Double) transaction[3];
             
-            // Income varies between 150-200 with some peaks
-            double income = 150 + random.nextDouble() * 50;
-            if (date.getDayOfMonth() == 15 || date.getDayOfMonth() == 1) {
-                // Salary days - higher income
-                income = 2500 + random.nextDouble() * 200;
+            // Parse date
+            LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            
+            // Add to transactions list
+            Transaction newTransaction = new Transaction(date, description, category, amount);
+            transactions.add(newTransaction);
+            
+            // Update daily maps
+            if (amount >= 0) {
+                dailyIncomes.put(date, dailyIncomes.getOrDefault(date, 0.0) + amount);
+                dailyIncomeDescriptions.put(date, description);
+            } else {
+                double absAmount = Math.abs(amount);
+                dailyExpenses.put(date, dailyExpenses.getOrDefault(date, 0.0) + absAmount);
+                dailyExpenseDescriptions.put(date, description);
+                dailyExpenseCategories.put(date, category);
+                
+                // Update category expenses
+                categoryExpenses.put(category, categoryExpenses.getOrDefault(category, 0.0) + absAmount);
             }
-            
-            // Expenses vary between 100-180 with some peaks
-            double expense = 100 + random.nextDouble() * 80;
-            if (date.getDayOfWeek().getValue() >= 5) { // Weekend
-                expense += 50 + random.nextDouble() * 30; // Higher weekend expenses
-            }
-            if (date.getDayOfMonth() == 10 || date.getDayOfMonth() == 25) {
-                // Bill payment days - higher expenses
-                expense += 500 + random.nextDouble() * 100;
-            }
-            
-            // Store the financial data
-            dailyIncomes.put(date, income);
-            dailyExpenses.put(date, expense);
-            
-            // Store consistent descriptions and categories
-            dailyExpenseDescriptions.put(date, 
-                    expenseDescriptions[random.nextInt(expenseDescriptions.length)]);
-            dailyIncomeDescriptions.put(date, 
-                    incomeDescriptions[random.nextInt(incomeDescriptions.length)]);
-            dailyExpenseCategories.put(date, 
-                    categoryList.get(random.nextInt(categoryList.size())));
         }
     }
     
-    private void initializeTransactionDescriptions() {
-        // Sample descriptions for expense transactions
-        expenseDescriptions = new String[] {
-            "Grocery Shopping", "Restaurant Bill", "Gas Station", "Electric Bill", 
-            "Internet Bill", "Movie Tickets", "Online Purchase", "Coffee Shop",
-            "Rent Payment", "Phone Bill", "Gym Membership", "Bus Ticket",
-            "Home Repair", "New Clothes", "Pet Food", "Medicine",
-            "Subscription Service", "School Supplies", "Takeout Food", "Car Repair"
-        };
+    // Inner class to represent a transaction
+    public static class Transaction {
+        private LocalDate date;
+        private String description;
+        private String category;
+        private double amount;
         
-        // Sample descriptions for income transactions
-        incomeDescriptions = new String[] {
-            "Salary Payment", "Freelance Work", "Investment Return", "Side Gig",
-            "Tax Refund", "Gift", "Bonus", "Commission",
-            "Rental Income", "Dividend Payment", "Consulting Fee", "Interest Income"
-        };
+        public Transaction(LocalDate date, String description, String category, double amount) {
+            this.date = date;
+            this.description = description;
+            this.category = category;
+            this.amount = amount;
+        }
+        
+        public LocalDate getDate() { return date; }
+        public String getDescription() { return description; }
+        public String getCategory() { return category; }
+        public double getAmount() { return amount; }
     }
     
     public double getTotalBalance() {
@@ -145,7 +133,10 @@ public class FinanceData {
     
     // Methods to get data for charts
     public List<LocalDate> getDates() {
-        List<LocalDate> dates = new ArrayList<>(dailyIncomes.keySet());
+        Set<LocalDate> allDates = new HashSet<>();
+        allDates.addAll(dailyIncomes.keySet());
+        allDates.addAll(dailyExpenses.keySet());
+        List<LocalDate> dates = new ArrayList<>(allDates);
         dates.sort(LocalDate::compareTo);
         return dates;
     }
@@ -198,20 +189,25 @@ public class FinanceData {
         return dailyExpenseCategories.getOrDefault(date, "Other");
     }
     
-    // Methods to access random transaction descriptions (for new transactions)
+    // 修改后的方法，不再依赖随机生成的描述
     public String getRandomExpenseDescription(Random random) {
-        return expenseDescriptions[random.nextInt(expenseDescriptions.length)];
+        return "Expense";
     }
     
     public String getRandomIncomeDescription(Random random) {
-        return incomeDescriptions[random.nextInt(incomeDescriptions.length)];
+        return "Income";
     }
     
+    // 修改这些方法返回空数组，而不是样例描述
     public String[] getExpenseDescriptions() {
-        return expenseDescriptions;
+        return new String[0];
     }
     
     public String[] getIncomeDescriptions() {
-        return incomeDescriptions;
+        return new String[0];
+    }
+    
+    public List<Transaction> getTransactions() {
+        return transactions;
     }
 }
