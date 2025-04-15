@@ -5,6 +5,7 @@ import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.BudgetCategoryPanel;
 import com.example.app.ui.dashboard.BudgetDialog;
+import com.example.app.model.CSVDataImporter;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -21,6 +22,17 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
 
     public BudgetsPanel() {
         this.financeData = new FinanceData();
+        
+        // 设置数据目录并加载预算
+        String dataDirectory = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data";
+        financeData.setDataDirectory(dataDirectory);
+        
+        // 先加载事务数据
+        loadTransactionData();
+        
+        // 再加载预算数据
+        financeData.loadBudgets();
+        
         setLayout(new BorderLayout(20, 0));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -298,17 +310,17 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
         if (dialog.showDialog()) {
             String category = dialog.getCategory();
             double budget = dialog.getBudget();
-            // In a real app, you would add the category to the data model
-            JOptionPane.showMessageDialog(this, 
-                    "Adding new category: " + category + " with budget: "+currencySymbol + budget,
-                    "Category Added", 
-                    JOptionPane.INFORMATION_MESSAGE);
             
-            // For demo purposes, let's pretend we updated the model and refresh UI
-            JOptionPane.showMessageDialog(this,
-                    "In a real application, this would update the database.\n" +
-                    "For this demo, the UI will not reflect the change.",
-                    "Demo Information",
+            // 更新模型并保存到文件
+            financeData.updateCategoryBudget(category, budget);
+            
+            // 刷新UI
+            updateUserCategoryPanels();
+            updateAISuggestedPanels();
+            
+            JOptionPane.showMessageDialog(this, 
+                    "已添加新类别: " + category + " 预算为: " + currencySymbol + budget,
+                    "类别已添加", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -325,10 +337,17 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
         
         if (dialog.showDialog()) {
             double newBudget = dialog.getBudget();
-            // In a real app, you would update the data model
+            
+            // 更新模型并保存到文件
+            financeData.updateCategoryBudget(category, newBudget);
+            
+            // 刷新UI
+            updateUserCategoryPanels();
+            updateAISuggestedPanels();
+            
             JOptionPane.showMessageDialog(this, 
-                    "Updating category: " + category + " with new budget: "+currencySymbol + newBudget,
-                    "Category Updated", 
+                    "已更新类别: " + category + " 的预算为: " + currencySymbol + newBudget,
+                    "类别已更新", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -336,18 +355,24 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     private void deleteCategory(String category) {
         int result = JOptionPane.showConfirmDialog(
                 this,
-                "Are you sure you want to delete the category: " + category + "?",
-                "Confirm Deletion",
+                "确定要删除类别: " + category + " 吗?",
+                "确认删除",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );
         
         if (result == JOptionPane.YES_OPTION) {
-            // In a real app, you would delete from the data model
-            JOptionPane.showMessageDialog(this, 
-                    "Category deleted: " + category,
-                    "Category Deleted", 
-                    JOptionPane.INFORMATION_MESSAGE);
+            // 从模型中删除并保存到文件
+            if (financeData.deleteCategoryBudget(category)) {
+                // 刷新UI
+                updateUserCategoryPanels();
+                updateAISuggestedPanels();
+                
+                JOptionPane.showMessageDialog(this, 
+                        "类别已删除: " + category,
+                        "类别已删除", 
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
         }
     }
     
@@ -362,22 +387,43 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     private void applyAISuggestions() {
         int result = JOptionPane.showConfirmDialog(
                 this,
-                "Do you want to apply the AI suggested budget allocations to your budget?",
-                "Apply AI Suggestions",
+                "确定要应用AI建议的预算分配到你的预算中吗?",
+                "应用AI建议",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
         );
         
         if (result == JOptionPane.YES_OPTION) {
-            // In a real app, you would update the data model with the AI suggestions
-            JOptionPane.showMessageDialog(this,
-                    "AI suggested budgets have been applied to your budget allocations!",
-                    "Suggestions Applied",
-                    JOptionPane.INFORMATION_MESSAGE);
+            // 获取AI建议的预算
+            Map<String, Double> actualBudgets = financeData.getCategoryBudgets();
+            double totalBudget = actualBudgets.values().stream().mapToDouble(Double::doubleValue).sum();
+            Map<String, Double> suggestedBudgets = generateSuggestedBudgets(actualBudgets, totalBudget);
             
-            // For demo purposes, let's pretend we updated and refresh the UI
-            shuffleAISuggestions();  // This gives the appearance of change for the demo
+            // 更新每个类别的预算
+            for (Map.Entry<String, Double> entry : suggestedBudgets.entrySet()) {
+                financeData.updateCategoryBudget(entry.getKey(), entry.getValue());
+            }
+            
+            // 刷新UI
             updateUserCategoryPanels();
+            updateAISuggestedPanels();
+            
+            JOptionPane.showMessageDialog(this,
+                    "AI建议的预算已应用到你的预算分配中!",
+                    "已应用建议",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void loadTransactionData() {
+        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
+        
+        if (!transactions.isEmpty()) {
+            financeData.importTransactions(transactions);
+            System.out.println("成功导入 " + transactions.size() + " 条交易记录");
+        } else {
+            System.err.println("没有交易记录被导入");
         }
     }
 

@@ -28,6 +28,9 @@ public class FinanceData {
     // List to store all transactions
     private List<Transaction> transactions;
     
+    // 用于存储预算文件的目录路径
+    private String dataDirectory;
+    
     public FinanceData() {
         // Initialize data structures
         initializeEmptyData();
@@ -320,10 +323,6 @@ public class FinanceData {
         return categoryExpenses;
     }
     
-    public double getCategoryBudget(String category) {
-        return categoryBudgets.getOrDefault(category, 0.0);
-    }
-    
     public double getCategoryExpense(String category) {
         return categoryExpenses.getOrDefault(category, 0.0);
     }
@@ -335,7 +334,13 @@ public class FinanceData {
     }
     
     public double getOverallBudgetPercentage() {
-        return (getTotalExpenses() / getMonthlyBudget()) * 100;
+        double totalBudget = categoryBudgets.values().stream().mapToDouble(Double::doubleValue).sum();
+        double totalExpense = getTotalExpenses();
+        
+        if (totalBudget > 0) {
+            return (totalExpense / totalBudget) * 100;
+        }
+        return 0.0;
     }
     
     // Methods to access consistent transaction descriptions
@@ -372,4 +377,63 @@ public class FinanceData {
     public List<Transaction> getTransactions() {
         return transactions;
     }
+    
+    /**
+     * 设置数据目录路径
+     */
+    public void setDataDirectory(String directory) {
+        this.dataDirectory = directory;
+    }
+
+    /**
+     * 加载预算数据
+     */
+    public void loadBudgets() {
+        if (dataDirectory != null) {
+            Map<String, Double> loadedBudgets = BudgetManager.loadBudgetsFromCSV(dataDirectory);
+            if (!loadedBudgets.isEmpty()) {
+                categoryBudgets.clear();
+                categoryBudgets.putAll(loadedBudgets);
+                System.out.println("已加载预算数据");
+            }
+        }
+    }
+
+    /**
+     * 保存预算数据
+     */
+    public void saveBudgets() {
+        if (dataDirectory != null && !categoryBudgets.isEmpty()) {
+            BudgetManager.saveBudgetsToCSV(categoryBudgets, dataDirectory);
+            System.out.println("已保存预算数据");
+        }
+    }
+
+    /**
+     * 更新类别预算
+     */
+    public void updateCategoryBudget(String category, double budget) {
+        categoryBudgets.put(category, budget);
+        saveBudgets(); // 更新后立即保存
+    }
+
+    /**
+     * 删除类别预算
+     */
+    public boolean deleteCategoryBudget(String category) {
+        if (categoryBudgets.containsKey(category)) {
+            categoryBudgets.remove(category);
+            saveBudgets(); // 删除后立即保存
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 获取指定类别的预算
+     */
+    public double getCategoryBudget(String category) {
+        return categoryBudgets.getOrDefault(category, 0.0);
+    }
+
 }
