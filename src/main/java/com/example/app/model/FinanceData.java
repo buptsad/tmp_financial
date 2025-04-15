@@ -58,33 +58,82 @@ public class FinanceData {
     
     // Method to import transactions from CSV
     public void importTransactions(List<Object[]> importedTransactions) {
+        // 首先清除现有数据
+        dailyIncomes.clear();
+        dailyExpenses.clear();
+        dailyIncomeDescriptions.clear();
+        dailyExpenseDescriptions.clear();
+        dailyExpenseCategories.clear();
+        transactions.clear();
+        
+        // 重置类别支出
+        categoryBudgets.keySet().forEach(category -> categoryExpenses.put(category, 0.0));
+        
+        // 处理类别映射，将CSV中的类别映射到我们的标准类别
+        Map<String, String> categoryMapping = new HashMap<>();
+        categoryMapping.put("Income", "Income");
+        categoryMapping.put("Expense", "Other");
+        categoryMapping.put("/", "Income");  // 修改这里，将 "/" 映射到 "Income"
+        
+        // 导入交易数据
         for (Object[] transaction : importedTransactions) {
             String dateStr = (String) transaction[0];
             String description = (String) transaction[1];
-            String category = (String) transaction[2];
+            String csvCategory = (String) transaction[2];
             double amount = (Double) transaction[3];
             
-            // Parse date
-            LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            // 映射类别
+            String category = categoryMapping.getOrDefault(csvCategory, "Other");
             
-            // Add to transactions list
-            Transaction newTransaction = new Transaction(date, description, category, amount);
-            transactions.add(newTransaction);
-            
-            // Update daily maps
-            if (amount >= 0) {
-                dailyIncomes.put(date, dailyIncomes.getOrDefault(date, 0.0) + amount);
-                dailyIncomeDescriptions.put(date, description);
-            } else {
-                double absAmount = Math.abs(amount);
-                dailyExpenses.put(date, dailyExpenses.getOrDefault(date, 0.0) + absAmount);
-                dailyExpenseDescriptions.put(date, description);
-                dailyExpenseCategories.put(date, category);
+            try {
+                // 解析日期
+                LocalDate date = LocalDate.parse(dateStr);
                 
-                // Update category expenses
-                categoryExpenses.put(category, categoryExpenses.getOrDefault(category, 0.0) + absAmount);
+                // 添加到交易列表
+                Transaction newTransaction = new Transaction(date, description, category, amount);
+                transactions.add(newTransaction);
+                
+                // 更新日常数据映射
+                if ("Income".equals(category) || amount >= 0) {  // 收入
+                    dailyIncomes.put(date, dailyIncomes.getOrDefault(date, 0.0) + amount);
+                    dailyIncomeDescriptions.put(date, description);
+                } else {  // 支出
+                    double absAmount = Math.abs(amount);
+                    dailyExpenses.put(date, dailyExpenses.getOrDefault(date, 0.0) + absAmount);
+                    dailyExpenseDescriptions.put(date, description);
+                    
+                    // 根据描述进一步分类支出
+                    String mappedCategory = mapDescriptionToCategory(description);
+                    dailyExpenseCategories.put(date, mappedCategory);
+                    
+                    // 更新类别支出
+                    categoryExpenses.put(mappedCategory, 
+                        categoryExpenses.getOrDefault(mappedCategory, 0.0) + absAmount);
+                }
+            } catch (Exception e) {
+                System.err.println("处理交易记录时出错: " + e.getMessage() + 
+                    " (日期: " + dateStr + ", 描述: " + description + ")");
             }
         }
+    }
+
+    private String mapDescriptionToCategory(String description) {
+        // 根据描述文本判断交易类别
+        description = description.toLowerCase();
+        
+        if (description.contains("转账") || description.contains("红包")) {
+            return "Other";
+        } else if (description.contains("群收款")) {
+            return "Entertainment";
+        } else if (description.contains("商户消费")) {
+            return "Food";  // 假设大多数商户消费是食物
+        } else if (description.contains("扫二维码付款")) {
+            return "Other";
+        } else if (description.contains("零钱通")) {
+            return "Other";
+        }
+        
+        return "Other";  // 默认类别
     }
     
     // Inner class to represent a transaction

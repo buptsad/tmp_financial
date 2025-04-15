@@ -14,7 +14,6 @@ Date,Description,Category,Amount,Confirmed
 2025-04-08,商户消费,Expense,-4.00,false
 2025-04-08,商户消费,Expense,-14.80,false
 2025-04-08,商户消费,Expense,-15.00,false
-2025-04-07,转入零钱通-来自零钱,/,2216.02,false
 2025-04-07,商户消费,Expense,-23.70,false
 2025-04-07,商户消费,Expense,-17.00,false
 2025-04-06,商户消费,Expense,-17.08,false
@@ -85,7 +84,6 @@ Date,Description,Category,Amount,Confirmed
 2025-04-08,商户消费,Expense,-4.00,false
 2025-04-08,商户消费,Expense,-14.80,false
 2025-04-08,商户消费,Expense,-15.00,false
-2025-04-07,转入零钱通-来自零钱,Income,2216.02,false
 2025-04-07,商户消费,Expense,-23.70,false
 2025-04-07,商户消费,Expense,-17.00,false
 2025-04-06,商户消费,Expense,-17.08,false
@@ -157,7 +155,6 @@ Date,Description,Category,Amount,Confirmed
 2025-04-08,商户消费,Expense,-4.00,false
 2025-04-08,商户消费,Expense,-14.80,false
 2025-04-08,商户消费,Expense,-15.00,false
-2025-04-07,转入零钱通-来自零钱,Income,2216.02,false
 2025-04-07,商户消费,Expense,-23.70,false
 2025-04-07,商户消费,Expense,-17.00,false
 2025-04-06,商户消费,Expense,-17.08,false
