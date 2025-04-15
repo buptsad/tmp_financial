@@ -1,21 +1,34 @@
 package com.example.app.ui.dashboard;
 
+import com.example.app.model.CSVDataImporter;
 import com.example.app.model.FinanceData;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.Map;
 
 public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener {
-    private final FinanceData financeData;
+    private FinanceData financeData;
     private final JPanel categoriesPanel;
-
-    String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+    private String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
     
     public DashboardBudgetsPanel() {
-        this.financeData = new FinanceData();
+        // 初始化财务数据
+        financeData = new FinanceData();
+        
+        // 设置数据目录并加载预算和交易数据
+        String dataDirectory = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data";
+        financeData.setDataDirectory(dataDirectory);
+        
+        // 先加载交易数据
+        loadTransactionData();
+        
+        // 再加载预算数据
+        financeData.loadBudgets();
+        
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
@@ -53,13 +66,52 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         add(scrollPane, BorderLayout.CENTER);
         
         // Add button panel
-        JPanel addButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton addButton = new JButton("Add Category");
-        addButton.setFont(new Font(addButton.getFont().getName(), Font.BOLD, 14));
-        addButton.setIcon(UIManager.getIcon("Tree.addIcon"));
-        addButton.addActionListener(e -> addNewCategory());
-        addButtonPanel.add(addButton);
-        add(addButtonPanel, BorderLayout.SOUTH);
+        //JPanel addButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        //JButton addButton = new JButton("Add Category");
+        //addButton.setFont(new Font(addButton.getFont().getName(), Font.BOLD, 14));
+        //addButton.setIcon(UIManager.getIcon("Tree.addIcon"));
+        //addButton.addActionListener(e -> addNewCategory());
+        //addButtonPanel.add(addButton);
+        
+        // 添加查看详细预算按钮
+        //JButton viewDetailsButton = new JButton("View Budget Details");
+        //viewDetailsButton.setFont(new Font(viewDetailsButton.getFont().getName(), Font.BOLD, 14));
+        //viewDetailsButton.addActionListener(e -> openFullBudgetPanel());
+        //addButtonPanel.add(viewDetailsButton);
+        
+        //add(addButtonPanel, BorderLayout.SOUTH);
+        
+        // 注册货币变化监听器
+        CurrencyManager.getInstance().addCurrencyChangeListener(this);
+    }
+    
+    /**
+     * 从CSV文件加载交易数据
+     */
+    private void loadTransactionData() {
+        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
+        
+        if (!transactions.isEmpty()) {
+            financeData.importTransactions(transactions);
+            System.out.println("DashboardBudgetsPanel: 成功导入 " + transactions.size() + " 条交易记录");
+        } else {
+            System.err.println("DashboardBudgetsPanel: 没有交易记录被导入");
+        }
+    }
+    
+    /**
+     * 打开完整预算面板
+     */
+    private void openFullBudgetPanel() {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            // 这里可以添加导航到完整BudgetsPanel的代码
+            JOptionPane.showMessageDialog(frame, 
+                "查看完整预算管理", 
+                "导航", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
     private void updateCategoryPanels() {
@@ -82,6 +134,29 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
             categoriesPanel.add(categoryPanel);
             categoriesPanel.add(Box.createVerticalStrut(10));
         }
+        
+        // 添加总计面板
+        //if (!budgets.isEmpty()) {
+            //double totalBudget = budgets.values().stream().mapToDouble(Double::doubleValue).sum();
+            //double totalExpense = expenses.values().stream().mapToDouble(Double::doubleValue).sum();
+            //double totalPercentage = totalBudget > 0 ? (totalExpense / totalBudget) * 100 : 0;
+            
+            //JPanel totalPanel = new JPanel(new BorderLayout());
+            //totalPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY));
+            
+            //JLabel totalLabel = new JLabel(String.format("<html><b>总预算: %s%.2f</b></html>", currencySymbol, totalBudget));
+            //totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 14));
+            //totalPanel.add(totalLabel, BorderLayout.WEST);
+            
+            //JProgressBar totalProgressBar = createProgressBar(totalPercentage);
+            //totalProgressBar.setPreferredSize(new Dimension(150, 15));
+            //JPanel progressPanel = new JPanel(new BorderLayout());
+            //progressPanel.add(totalProgressBar, BorderLayout.CENTER);
+            //totalPanel.add(progressPanel, BorderLayout.EAST);
+            
+            //categoriesPanel.add(Box.createVerticalStrut(10));
+            //categoriesPanel.add(totalPanel);
+        //}
         
         revalidate();
         repaint();
@@ -109,11 +184,16 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         if (dialog.showDialog()) {
             String category = dialog.getCategory();
             double budget = dialog.getBudget();
-            // In a real app, you would add the category to the data model
-            // For demo purposes, we're just showing the dialog
+            
+            // 更新财务数据并保存到CSV文件
+            financeData.updateCategoryBudget(category, budget);
+            
+            // 更新UI
+            updateCategoryPanels();
+            
             JOptionPane.showMessageDialog(this, 
-                    "Adding new category: " + category + " with budget: " +currencySymbol + budget,
-                    "Category Added", 
+                    "新类别已添加: " + category + " 预算: " + currencySymbol + budget,
+                    "类别已添加", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -128,11 +208,16 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         
         if (dialog.showDialog()) {
             double newBudget = dialog.getBudget();
-            // In a real app, you would update the data model
-            // For demo purposes, we're just showing the dialog
+            
+            // 更新财务数据并保存到CSV文件
+            financeData.updateCategoryBudget(category, newBudget);
+            
+            // 更新UI
+            updateCategoryPanels();
+            
             JOptionPane.showMessageDialog(this, 
-                    "Updating category: " + category + " with new budget: "+currencySymbol + newBudget,
-                    "Category Updated", 
+                    "类别已更新: " + category + " 新预算: " + currencySymbol + newBudget,
+                    "类别已更新", 
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -140,18 +225,23 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
     private void deleteCategory(String category) {
         int result = JOptionPane.showConfirmDialog(
                 this,
-                "Are you sure you want to delete the category: " + category + "?",
-                "Confirm Deletion",
+                "确定要删除类别: " + category + " 吗?",
+                "确认删除",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE
         );
         
         if (result == JOptionPane.YES_OPTION) {
-            // In a real app, you would delete from the data model
-            JOptionPane.showMessageDialog(this, 
-                    "Category deleted: " + category,
-                    "Category Deleted", 
-                    JOptionPane.INFORMATION_MESSAGE);
+            // 从财务数据中删除类别并保存到CSV文件
+            if (financeData.deleteCategoryBudget(category)) {
+                // 更新UI
+                updateCategoryPanels();
+                
+                JOptionPane.showMessageDialog(this, 
+                        "类别已删除: " + category,
+                        "类别已删除", 
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
         }
     }
 
