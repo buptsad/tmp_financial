@@ -22,3 +22,6 @@ gradle-app.setting
 .classpath
 
 .vscode
+
+# ignore built files
+bin
