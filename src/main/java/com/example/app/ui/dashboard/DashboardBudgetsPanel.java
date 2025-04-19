@@ -20,7 +20,7 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         financeData = new FinanceData();
         
         // 设置数据目录并加载预算和交易数据
-        String dataDirectory = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data";
+        String dataDirectory = ".\\user_data";
         financeData.setDataDirectory(dataDirectory);
         
         // 先加载交易数据
@@ -89,7 +89,7 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
      * 从CSV文件加载交易数据
      */
     private void loadTransactionData() {
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        String csvFilePath = ".\\user_data\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         if (!transactions.isEmpty()) {

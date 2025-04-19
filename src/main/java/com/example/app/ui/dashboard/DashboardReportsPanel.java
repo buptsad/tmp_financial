@@ -66,7 +66,7 @@ public class DashboardReportsPanel extends JPanel implements CurrencyChangeListe
      * 从CSV文件加载交易数据
      */
     private void loadTransactionData() {
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        String csvFilePath = ".\\user_data\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         if (!transactions.isEmpty()) {
