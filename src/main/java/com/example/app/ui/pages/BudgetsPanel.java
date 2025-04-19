@@ -19,12 +19,14 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     private final JPanel userBudgetsPanel;
     private final JPanel aiSuggestedPanel;
     private Random random = new Random();
+    private String username;
 
-    public BudgetsPanel() {
+    public BudgetsPanel(String username) {
+        this.username = username;
         this.financeData = new FinanceData();
         
         // 设置数据目录并加载预算
-        String dataDirectory = ".\\user_data";
+        String dataDirectory = ".\\user_data\\" + username;
         financeData.setDataDirectory(dataDirectory);
         
         // 先加载事务数据
@@ -416,7 +418,8 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     }
 
     private void loadTransactionData() {
-        String csvFilePath = ".\\user_data\\user_bill.csv";
+        // 使用用户特定的路径
+        String csvFilePath = ".\\user_data\\" + username + "\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
 
         if (!transactions.isEmpty()) {

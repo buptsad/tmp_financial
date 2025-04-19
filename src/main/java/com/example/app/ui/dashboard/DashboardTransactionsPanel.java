@@ -19,8 +19,11 @@ public class DashboardTransactionsPanel extends JPanel implements CurrencyChange
     private FinanceData financeData;
     private DefaultTableModel tableModel;
     private static final int MAX_TRANSACTIONS = 20; // 显示的最大交易数量
+
+    private String username;
     
-    public DashboardTransactionsPanel() {
+    public DashboardTransactionsPanel(String username) {
+        this.username = username;
         financeData = new FinanceData();
         
         // 先从CSV文件加载数据
@@ -53,7 +56,8 @@ public class DashboardTransactionsPanel extends JPanel implements CurrencyChange
      * 从CSV文件加载交易数据
      */
     private void loadTransactionData() {
-        String csvFilePath = ".\\user_data\\user_bill.csv";
+        // 使用用户特定的路径
+        String csvFilePath = ".\\user_data\\" + username + "\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         if (!transactions.isEmpty()) {

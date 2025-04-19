@@ -17,8 +17,10 @@ public class AIPanel extends JPanel {
     private JTextArea chatArea;
     private JTextField inputField;
     private JButton sendButton;
+    private String username;
 
-    public AIPanel() {
+    public AIPanel(String username) {
+        this.username = username;
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(20, 20, 20, 20));
 

@@ -20,8 +20,11 @@ public class OverviewPanel extends JPanel {
     
     // Static instance for access across the application
     public static FinancialAdvice sharedAdvice = new FinancialAdvice();
+
+    private String username;
     
-    public OverviewPanel() {
+    public OverviewPanel(String username) {
+        this.username = username;
         // Initialize data model
         financeData = new FinanceData();
         

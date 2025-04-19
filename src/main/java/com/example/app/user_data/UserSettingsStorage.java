@@ -13,10 +13,16 @@ public class UserSettingsStorage {
     private static final Logger LOGGER = Logger.getLogger(UserSettingsStorage.class.getName());
     private static final String SETTINGS_FILENAME = "user_settings.properties";
     private static File settingsFile;
+    private static String username; // 添加用户名字段
     
-    static {
-        // 直接使用项目内的文件路径
-        String packagePath = ".\\user_data";
+    /**
+     * 设置当前用户名，并更新文件路径
+     * @param username 当前用户的用户名
+     */
+    public static void setUsername(String username) {
+        UserSettingsStorage.username = username;
+        // 更新文件路径为用户特定路径
+        String packagePath = ".\\user_data\\" + username;
         settingsFile = new File(packagePath, SETTINGS_FILENAME);
         
         // 确保文件存在
@@ -47,7 +53,7 @@ public class UserSettingsStorage {
                     Properties defaultProperties = new Properties();
                     
                     // Default profile settings
-                    defaultProperties.setProperty("user.name", "");
+                    defaultProperties.setProperty("user.name", username != null ? username : "");
                     defaultProperties.setProperty("user.email", "");
                     defaultProperties.setProperty("user.phone", "");
                     
