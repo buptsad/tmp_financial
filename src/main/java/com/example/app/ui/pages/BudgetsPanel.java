@@ -416,7 +416,7 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     }
 
     private void loadTransactionData() {
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        String csvFilePath = ".\\user_data\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
 
         if (!transactions.isEmpty()) {

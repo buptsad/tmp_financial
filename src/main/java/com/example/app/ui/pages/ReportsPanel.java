@@ -212,7 +212,7 @@ public class ReportsPanel extends JPanel {
     
     private void loadTransactionData() {
         // 读取CSV文件数据
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        String csvFilePath = ".\\user_data\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         // 将数据导入到FinanceData模型中
