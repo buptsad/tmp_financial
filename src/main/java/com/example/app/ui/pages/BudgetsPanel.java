@@ -6,6 +6,8 @@ import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.BudgetCategoryPanel;
 import com.example.app.ui.dashboard.BudgetDialog;
 import com.example.app.model.CSVDataImporter;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -14,7 +16,7 @@ import java.awt.event.ActionEvent;
 import java.util.*;
 import java.util.List;
 
-public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
+public class BudgetsPanel extends JPanel implements CurrencyChangeListener, DataRefreshListener {
     private final FinanceData financeData;
     private final JPanel userBudgetsPanel;
     private final JPanel aiSuggestedPanel;
@@ -128,6 +130,8 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
         // 注册货币变化监听器
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
         
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
 
     private void updateUserCategoryPanels() {
@@ -438,9 +442,27 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener {
     }
 
     @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.BUDGETS || 
+            type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            
+            // Reload data if needed
+            if (type == DataRefreshManager.RefreshType.TRANSACTIONS) {
+                loadTransactionData();
+            }
+            
+            // Refresh UI components
+            updateUserCategoryPanels();
+            updateAISuggestedPanels();
+        }
+    }
+
+    @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
+        // Unregister when component is removed from UI
+        DataRefreshManager.getInstance().removeListener(this);
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }

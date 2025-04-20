@@ -9,11 +9,13 @@ import com.example.app.ui.reports.*;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.report.CategorySpendingChartPanel;
 import com.example.app.ui.dashboard.report.IncomeExpensesChartPanel;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
 import java.awt.*;
 import java.util.List;
 
-public class DashboardReportsPanel extends JPanel implements CurrencyChangeListener {
+public class DashboardReportsPanel extends JPanel implements CurrencyChangeListener, DataRefreshListener {
     
     private final FinanceData financeData = new FinanceData();
     private IncomeExpensesReportPanel incomeExpensesPanel;
@@ -61,6 +63,9 @@ public class DashboardReportsPanel extends JPanel implements CurrencyChangeListe
         
         // 注册货币变化监听
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
+        
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
     
     /**
@@ -105,9 +110,28 @@ public class DashboardReportsPanel extends JPanel implements CurrencyChangeListe
     }
     
     @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            // Reload transaction data
+            loadTransactionData();
+            
+            // Refresh charts
+            if (incomeExpensesPanel != null) {
+                incomeExpensesPanel.refreshChart();
+            }
+            
+            if (categoryBreakdownPanel != null) {
+                categoryBreakdownPanel.refreshChart();
+            }
+        }
+    }
+    
+    @Override
     public void removeNotify() {
         super.removeNotify();
         // 移除组件时取消监听
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        DataRefreshManager.getInstance().removeListener(this);
     }
 }

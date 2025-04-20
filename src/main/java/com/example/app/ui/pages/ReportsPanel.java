@@ -3,13 +3,15 @@ package com.example.app.ui.pages;
 import com.example.app.model.FinanceData;
 import com.example.app.ui.reports.*;
 import com.example.app.model.CSVDataImporter;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-public class ReportsPanel extends JPanel {
+public class ReportsPanel extends JPanel implements DataRefreshListener {
     
     private final FinanceData financeData = new FinanceData();
     private JPanel chartContainer;
@@ -64,6 +66,9 @@ public class ReportsPanel extends JPanel {
         scrollPane.setBorder(null);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
+        
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
 
     private JPanel createHeaderPanel() {
@@ -224,5 +229,26 @@ public class ReportsPanel extends JPanel {
         } else {
             System.err.println("没有交易记录被导入");
         }
+    }
+    
+    @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            // Reload transaction data
+            loadTransactionData();
+            
+            // Refresh all charts
+            incomeExpensesPanel.refreshChart();
+            categoryBreakdownPanel.refreshChart();
+            trendReportPanel.refreshChart();
+        }
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // Unregister when component is removed from UI
+        DataRefreshManager.getInstance().removeListener(this);
     }
 }

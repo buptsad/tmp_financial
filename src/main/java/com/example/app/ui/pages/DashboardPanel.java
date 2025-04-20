@@ -11,8 +11,10 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
-public class DashboardPanel extends JPanel implements CurrencyChangeListener {
+public class DashboardPanel extends JPanel implements CurrencyChangeListener, DataRefreshListener {
     private JScrollPane contentScrollPane;
     private JPanel contentPanel;
     private JPanel summaryPanel; // Declare summaryPanel as a class-level field
@@ -133,6 +135,8 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
             ));
         }
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
     
     private void createSummaryPanels() {
@@ -321,9 +325,38 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     }
     
     @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.ALL) {
+            // Refresh summary boxes
+            if (summaryPanel != null) {
+                Container parent = summaryPanel.getParent();
+                if (parent != null) {
+                    parent.remove(summaryPanel);
+                    summaryPanel = createSummaryPanel();
+                    
+                    if (parent instanceof JPanel) {
+                        JPanel parentPanel = (JPanel) parent;
+                        if (parentPanel.getLayout() instanceof BorderLayout) {
+                            parentPanel.add(summaryPanel, BorderLayout.NORTH);
+                        } else if (parentPanel.getLayout() instanceof BoxLayout) {
+                            parentPanel.add(summaryPanel, 0);
+                        } else {
+                            parentPanel.add(summaryPanel);
+                        }
+                    }
+                    
+                    parent.revalidate();
+                    parent.repaint();
+                }
+            }
+        }
+    }
+    
+    @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
+        // Unregister from all listeners
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        DataRefreshManager.getInstance().removeListener(this);
     }
 }

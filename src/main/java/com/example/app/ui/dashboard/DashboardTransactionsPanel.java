@@ -4,6 +4,8 @@ import com.example.app.model.FinanceData;
 import com.example.app.model.CSVDataImporter;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -14,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
-public class DashboardTransactionsPanel extends JPanel implements CurrencyChangeListener {
+public class DashboardTransactionsPanel extends JPanel implements CurrencyChangeListener, DataRefreshListener {
     private JTable transactionsTable;
     private FinanceData financeData;
     private DefaultTableModel tableModel;
@@ -50,6 +52,9 @@ public class DashboardTransactionsPanel extends JPanel implements CurrencyChange
         
         // 注册货币变化监听器
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
+        
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
     
     /**
@@ -226,9 +231,30 @@ public class DashboardTransactionsPanel extends JPanel implements CurrencyChange
     }
     
     @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            // Reload data
+            loadTransactionData();
+            
+            // Refresh table
+            tableModel.setRowCount(0);
+            populateTableWithRecentTransactions(tableModel);
+            
+            // Update currency formatting
+            updateAmountRenderer();
+            
+            // Refresh UI
+            transactionsTable.revalidate();
+            transactionsTable.repaint();
+        }
+    }
+    
+    @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
+        // Unregister from all listeners
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        DataRefreshManager.getInstance().removeListener(this);
     }
 }

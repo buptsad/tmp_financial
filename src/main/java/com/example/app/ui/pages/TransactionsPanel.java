@@ -3,6 +3,8 @@ package com.example.app.ui.pages;
 import com.example.app.model.FinanceData;
 import com.example.app.ui.dialogs.CSVImportDialog;
 import com.example.app.user_data.UserBillStorage;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -18,7 +20,7 @@ import java.awt.event.ActionListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TransactionsPanel extends JPanel {
+public class TransactionsPanel extends JPanel implements DataRefreshListener {
     private JTable transactionsTable;
     private DefaultTableModel tableModel;
     private JTextField searchField;
@@ -57,6 +59,9 @@ public class TransactionsPanel extends JPanel {
         JPanel bottomPanel = createButtonPanel();
         add(bottomPanel, BorderLayout.SOUTH);
 
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
+        
         // Load saved transactions
         loadSavedTransactions();
     }
@@ -347,30 +352,45 @@ public class TransactionsPanel extends JPanel {
     }
     
     private void saveChanges() {
-        // In a real application, you would save to a database or file
-        // For this demonstration, we'll just show the changes that would be saved
-        
-        StringBuilder savedChanges = new StringBuilder("Changes saved:\n\n");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        
-        // Collect all table data that would be saved
-        for (int i = 0; i < tableModel.getRowCount(); i++) {
-            String date = tableModel.getValueAt(i, 0).toString();
-            String description = tableModel.getValueAt(i, 1).toString();
-            String category = tableModel.getValueAt(i, 2).toString();
-            Double amount = (Double) tableModel.getValueAt(i, 3);
+        try {
+            // Collect all table data to save
+            List<Object[]> transactionsToSave = new ArrayList<>();
             
-            savedChanges.append(String.format("Row %d: %s | %s | %s | %.2f\n", 
-                i+1, date, description, category, amount));
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                String date = tableModel.getValueAt(i, 0).toString();
+                String description = tableModel.getValueAt(i, 1).toString();
+                String category = tableModel.getValueAt(i, 2).toString();
+                Double amount = (Double) tableModel.getValueAt(i, 3);
+                
+                // Create transaction data array (matches CSV format)
+                Object[] transactionData = {date, description, category, amount, false};
+                transactionsToSave.add(transactionData);
+            }
+            
+            // Save to storage
+            UserBillStorage.setUsername(username);
+            UserBillStorage.saveTransactions(transactionsToSave);
+            LOGGER.log(Level.INFO, "Saved {0} transactions to storage", transactionsToSave.size());
+            
+            // Update the finance data model
+            List<Object[]> formattedTransactions = new ArrayList<>(transactionsToSave);
+            financeData.importTransactionsAndNotify(formattedTransactions);
+            
+            // Show success message
+            JOptionPane.showMessageDialog(this, 
+                    "Changes saved successfully", 
+                    "Changes Saved", JOptionPane.INFORMATION_MESSAGE);
+            
+            setHasUnsavedChanges(false);
+            
+            // Manually trigger a refresh for all components
+            DataRefreshManager.getInstance().refreshTransactions();
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Failed to save transactions", ex);
+            JOptionPane.showMessageDialog(this, 
+                    "Error saving transactions: " + ex.getMessage(),
+                    "Save Error", JOptionPane.ERROR_MESSAGE);
         }
-        
-        // Here you would typically save to a database or update financeData
-        
-        JOptionPane.showMessageDialog(this, 
-                "Changes Saved", 
-                "Changes Saved", JOptionPane.INFORMATION_MESSAGE);
-        
-        setHasUnsavedChanges(false);
     }
     
     private void cancelChanges() {
@@ -389,35 +409,28 @@ public class TransactionsPanel extends JPanel {
 
     private void loadSavedTransactions() {
         try {
-            // 确保 UserBillStorage 已初始化
+            // Ensure UserBillStorage is initialized
             if (username != null && !username.isEmpty()) {
-                // 如果尚未初始化，先初始化
                 if (UserBillStorage.getBillFilePath() == null) {
                     UserBillStorage.setUsername(username);
                 }
             }
             
-            // 现在安全地加载交易
+            // Load transactions from storage
             List<Object[]> savedTransactions = UserBillStorage.loadTransactions();
             
-            // 添加代码：实际处理加载的交易记录
             if (savedTransactions != null && !savedTransactions.isEmpty()) {
-                // 清空现有表格数据
+                // Clear existing table data
                 tableModel.setRowCount(0);
                 
-                // 将加载的交易记录添加到表格模型中
+                // Add loaded transactions to table
                 for (Object[] transaction : savedTransactions) {
-                    // 假设交易记录的格式是：日期,描述,类别,金额,是否确认
-                    // 我们需要转换格式以匹配表格模型
-                    
-                    // 首先检查是否有足够的数据
                     if (transaction.length >= 4) {
                         String date = transaction[0].toString();
                         String description = transaction[1].toString();
                         String category = transaction[2].toString();
                         Double amount = 0.0;
                         
-                        // 尝试解析金额
                         try {
                             if (transaction[3] instanceof Double) {
                                 amount = (Double) transaction[3];
@@ -428,10 +441,14 @@ public class TransactionsPanel extends JPanel {
                             LOGGER.log(Level.WARNING, "Invalid amount format: " + transaction[3], e);
                         }
                         
-                        // 添加到表格模型，最后一列是删除复选框，默认为false
+                        // Add to table
                         tableModel.addRow(new Object[] {date, description, category, amount, false});
                     }
                 }
+                
+                // IMPORTANT: Update financeData with loaded transactions
+                // This ensures consistency between displayed data and model
+                financeData.importTransactions(savedTransactions);
                 
                 LOGGER.log(Level.INFO, "Successfully loaded " + savedTransactions.size() + " transactions");
             } else {
@@ -444,5 +461,31 @@ public class TransactionsPanel extends JPanel {
                 "Failed to load transactions: " + e.getMessage(),
                 "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            // Clear the table
+            tableModel.setRowCount(0);
+            
+            // Load transactions directly from storage
+            // This ensures we see what's actually saved on disk
+            loadSavedTransactions();
+            
+            // Don't call populateTableWithSampleData() - it gets data from financeData
+            // which may not reflect what's in storage
+            
+            // Log the refresh for debugging
+            LOGGER.log(Level.INFO, "Refreshed transactions table with {0} rows", tableModel.getRowCount());
+        }
+    }
+    
+    @Override
+    public void removeNotify() {
+        super.removeNotify();
+        // Unregister when component is removed from UI
+        DataRefreshManager.getInstance().removeListener(this);
     }
 }

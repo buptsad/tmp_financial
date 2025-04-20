@@ -395,6 +395,8 @@ public class FinanceData {
                 categoryBudgets.clear();
                 categoryBudgets.putAll(loadedBudgets);
                 System.out.println("已加载预算数据");
+                // Notify listeners that budget data has changed
+                DataRefreshManager.getInstance().refreshBudgets();
             }
         }
     }
@@ -414,7 +416,9 @@ public class FinanceData {
      */
     public void updateCategoryBudget(String category, double budget) {
         categoryBudgets.put(category, budget);
-        saveBudgets(); // 更新后立即保存
+        saveBudgets(); // Update the saved budgets
+        // Notify listeners that budget data has changed
+        DataRefreshManager.getInstance().refreshBudgets();
     }
 
     /**
@@ -423,7 +427,9 @@ public class FinanceData {
     public boolean deleteCategoryBudget(String category) {
         if (categoryBudgets.containsKey(category)) {
             categoryBudgets.remove(category);
-            saveBudgets(); // 删除后立即保存
+            saveBudgets(); // Save the changes
+            // Notify listeners that budget data has changed
+            DataRefreshManager.getInstance().refreshBudgets();
             return true;
         }
         return false;
@@ -434,6 +440,15 @@ public class FinanceData {
      */
     public double getCategoryBudget(String category) {
         return categoryBudgets.getOrDefault(category, 0.0);
+    }
+
+    /**
+     * Import transactions and notify listeners
+     */
+    public void importTransactionsAndNotify(List<Object[]> importedTransactions) {
+        importTransactions(importedTransactions);
+        // Notify listeners that transaction data has changed
+        DataRefreshManager.getInstance().refreshTransactions();
     }
 
 }

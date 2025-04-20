@@ -4,6 +4,8 @@ import com.example.app.model.CSVDataImporter;
 import com.example.app.model.FinanceData;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
+import com.example.app.model.DataRefreshListener;
+import com.example.app.model.DataRefreshManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +14,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener {
+public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener, DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardBudgetsPanel.class.getName());
     
     private FinanceData financeData;
@@ -77,6 +79,9 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         
         // 注册货币变化监听器
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
+        
+        // Register as listener for data refresh events
+        DataRefreshManager.getInstance().addListener(this);
     }
     
     /**
@@ -226,10 +231,30 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
     }
     
     @Override
+    public void onDataRefresh(DataRefreshManager.RefreshType type) {
+        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
+            type == DataRefreshManager.RefreshType.BUDGETS || 
+            type == DataRefreshManager.RefreshType.ALL) {
+            
+            // Reload data if needed
+            if (type == DataRefreshManager.RefreshType.TRANSACTIONS) {
+                loadTransactionData();
+            }
+            else if (type == DataRefreshManager.RefreshType.BUDGETS) {
+                financeData.loadBudgets();
+            }
+            
+            // Update the UI
+            updateCategoryPanels();
+        }
+    }
+    
+    @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
+        // Unregister from all listeners
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        DataRefreshManager.getInstance().removeListener(this);
     }
     
     // 提供一个公共方法来更新用户名和对应的数据路径
