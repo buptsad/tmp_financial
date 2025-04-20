@@ -9,19 +9,29 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener {
+    private static final Logger LOGGER = Logger.getLogger(DashboardBudgetsPanel.class.getName());
+    
     private FinanceData financeData;
     private final JPanel categoriesPanel;
     private String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
+    private String username; // 存储当前用户名
+    private String userDataPath; // 存储用户特定的数据路径
     
-    public DashboardBudgetsPanel() {
+    public DashboardBudgetsPanel(String username) {
+        this.username = username;
+        this.userDataPath = ".\\user_data\\" + username; // 设置用户特定的数据路径
+        
         // 初始化财务数据
         financeData = new FinanceData();
         
-        // 设置数据目录并加载预算和交易数据
-        String dataDirectory = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data";
-        financeData.setDataDirectory(dataDirectory);
+        // 设置用户特定的数据目录
+        financeData.setDataDirectory(userDataPath);
+        
+        LOGGER.log(Level.INFO, "正在为用户 {0} 加载预算数据，路径: {1}", new Object[]{username, userDataPath});
         
         // 先加载交易数据
         loadTransactionData();
@@ -65,38 +75,22 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
         
-        // Add button panel
-        //JPanel addButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        //JButton addButton = new JButton("Add Category");
-        //addButton.setFont(new Font(addButton.getFont().getName(), Font.BOLD, 14));
-        //addButton.setIcon(UIManager.getIcon("Tree.addIcon"));
-        //addButton.addActionListener(e -> addNewCategory());
-        //addButtonPanel.add(addButton);
-        
-        // 添加查看详细预算按钮
-        //JButton viewDetailsButton = new JButton("View Budget Details");
-        //viewDetailsButton.setFont(new Font(viewDetailsButton.getFont().getName(), Font.BOLD, 14));
-        //viewDetailsButton.addActionListener(e -> openFullBudgetPanel());
-        //addButtonPanel.add(viewDetailsButton);
-        
-        //add(addButtonPanel, BorderLayout.SOUTH);
-        
         // 注册货币变化监听器
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     /**
-     * 从CSV文件加载交易数据
+     * 从用户特定的CSV文件加载交易数据
      */
     private void loadTransactionData() {
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        String csvFilePath = userDataPath + "\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         if (!transactions.isEmpty()) {
             financeData.importTransactions(transactions);
-            System.out.println("DashboardBudgetsPanel: 成功导入 " + transactions.size() + " 条交易记录");
+            LOGGER.log(Level.INFO, "用户 {0}: 成功导入 {1} 条交易记录", new Object[]{username, transactions.size()});
         } else {
-            System.err.println("DashboardBudgetsPanel: 没有交易记录被导入");
+            LOGGER.log(Level.WARNING, "用户 {0}: 没有交易记录被导入", username);
         }
     }
     
@@ -134,29 +128,6 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
             categoriesPanel.add(categoryPanel);
             categoriesPanel.add(Box.createVerticalStrut(10));
         }
-        
-        // 添加总计面板
-        //if (!budgets.isEmpty()) {
-            //double totalBudget = budgets.values().stream().mapToDouble(Double::doubleValue).sum();
-            //double totalExpense = expenses.values().stream().mapToDouble(Double::doubleValue).sum();
-            //double totalPercentage = totalBudget > 0 ? (totalExpense / totalBudget) * 100 : 0;
-            
-            //JPanel totalPanel = new JPanel(new BorderLayout());
-            //totalPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY));
-            
-            //JLabel totalLabel = new JLabel(String.format("<html><b>总预算: %s%.2f</b></html>", currencySymbol, totalBudget));
-            //totalLabel.setFont(new Font(totalLabel.getFont().getName(), Font.BOLD, 14));
-            //totalPanel.add(totalLabel, BorderLayout.WEST);
-            
-            //JProgressBar totalProgressBar = createProgressBar(totalPercentage);
-            //totalProgressBar.setPreferredSize(new Dimension(150, 15));
-            //JPanel progressPanel = new JPanel(new BorderLayout());
-            //progressPanel.add(totalProgressBar, BorderLayout.CENTER);
-            //totalPanel.add(progressPanel, BorderLayout.EAST);
-            
-            //categoriesPanel.add(Box.createVerticalStrut(10));
-            //categoriesPanel.add(totalPanel);
-        //}
         
         revalidate();
         repaint();
@@ -259,5 +230,19 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         super.removeNotify();
         // 移除组件时取消监听
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+    }
+    
+    // 提供一个公共方法来更新用户名和对应的数据路径
+    public void setUsername(String username) {
+        this.username = username;
+        this.userDataPath = ".\\user_data\\" + username;
+        
+        // 更新数据路径并重新加载数据
+        financeData.setDataDirectory(userDataPath);
+        loadTransactionData();
+        financeData.loadBudgets();
+        
+        // 更新UI
+        updateCategoryPanels();
     }
 }

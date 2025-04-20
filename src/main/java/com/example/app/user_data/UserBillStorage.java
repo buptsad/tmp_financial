@@ -15,15 +15,21 @@ public class UserBillStorage {
     private static final Logger LOGGER = Logger.getLogger(UserBillStorage.class.getName());
     private static final String BILL_FILENAME = "user_bill.csv";
     private static File billFile;
+    private static String username; // 添加用户名字段
     
     // 定义CSV格式
     private static final String CSV_HEADER = "Date,Description,Category,Amount,Confirmed";
     private static final String CSV_FORMAT = "%s,%s,%s,%.2f,%b";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     
-    static {
-        // 直接使用项目内的文件路径
-        String packagePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data";
+    /**
+     * 设置当前用户名，并更新文件路径
+     * @param username 当前用户的用户名
+     */
+    public static void setUsername(String username) {
+        UserBillStorage.username = username;
+        // 更新文件路径为用户特定路径
+        String packagePath = ".\\user_data\\" + username;
         billFile = new File(packagePath, BILL_FILENAME);
         
         // 确保文件存在

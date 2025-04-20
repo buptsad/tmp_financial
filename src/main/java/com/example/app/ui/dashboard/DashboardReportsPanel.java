@@ -15,14 +15,15 @@ import java.util.List;
 
 public class DashboardReportsPanel extends JPanel implements CurrencyChangeListener {
     
-    //private FinanceData financeData;
     private final FinanceData financeData = new FinanceData();
     private IncomeExpensesReportPanel incomeExpensesPanel;
     private CategoryBreakdownPanel categoryBreakdownPanel;
+    private String username; // 添加用户名字段
     
-    public DashboardReportsPanel() {
-        // 初始化财务数据
+    public DashboardReportsPanel(String username) { // 修改构造函数接收用户名
+        this.username = username; // 保存用户名
         
+        // 初始化财务数据
         // 从文件加载交易数据
         loadTransactionData();
         
@@ -66,7 +67,8 @@ public class DashboardReportsPanel extends JPanel implements CurrencyChangeListe
      * 从CSV文件加载交易数据
      */
     private void loadTransactionData() {
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        // 使用用户特定的路径
+        String csvFilePath = ".\\user_data\\" + username + "\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         if (!transactions.isEmpty()) {

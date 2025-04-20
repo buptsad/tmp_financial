@@ -21,6 +21,7 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     private JButton transactionsButton;
     private JButton budgetsButton;
     private JButton reportsButton;
+
     
     // Constants for card layout
     private static final String OVERVIEW_PANEL = "OVERVIEW";
@@ -32,8 +33,11 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
     private static final Color SELECTED_COLOR = new Color(70, 130, 180);
     private static final Color HOVER_COLOR = new Color(100, 149, 237);
     private static final Color DEFAULT_COLOR = UIManager.getColor("Button.background");
+
+    private String username;
     
-    public DashboardPanel() {
+    public DashboardPanel(String username) {
+        this.username = username;
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(15, 15, 15, 15)); // Reduced border padding
         
@@ -63,10 +67,10 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener {
         contentPanel = new JPanel(cardLayout);
         
         // Add sub-panels to the card layout
-        contentPanel.add(new OverviewPanel(), OVERVIEW_PANEL);
-        contentPanel.add(new DashboardTransactionsPanel(), TRANSACTIONS_PANEL);
-        contentPanel.add(new DashboardBudgetsPanel(), BUDGETS_PANEL);
-        contentPanel.add(new DashboardReportsPanel(), REPORTS_PANEL);
+        contentPanel.add(new OverviewPanel(username), OVERVIEW_PANEL);
+        contentPanel.add(new DashboardTransactionsPanel(username), TRANSACTIONS_PANEL);
+        contentPanel.add(new DashboardBudgetsPanel(username), BUDGETS_PANEL);
+        contentPanel.add(new DashboardReportsPanel(username), REPORTS_PANEL);
         
         // Wrap contentPanel in a JScrollPane with appropriate scroll policies
         contentScrollPane = new JScrollPane(contentPanel);

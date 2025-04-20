@@ -25,7 +25,9 @@ public class ReportsPanel extends JPanel {
     private static final String CATEGORY_BREAKDOWN_PANEL = "CATEGORY_BREAKDOWN";
     private static final String TREND_PANEL = "TREND";
     
-    public ReportsPanel() {
+    private String username;
+    public ReportsPanel(String username) {
+        this.username = username;
         // 导入交易数据
         loadTransactionData();
         
@@ -211,8 +213,8 @@ public class ReportsPanel extends JPanel {
     }
     
     private void loadTransactionData() {
-        // 读取CSV文件数据
-        String csvFilePath = "c:\\tmp_financial\\src\\main\\java\\com\\example\\app\\user_data\\user_bill.csv";
+        // 读取CSV文件数据 - 使用用户特定的路径
+        String csvFilePath = ".\\user_data\\" + username + "\\user_bill.csv";
         List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
         
         // 将数据导入到FinanceData模型中

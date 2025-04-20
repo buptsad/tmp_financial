@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TransactionsPanel extends JPanel {
     private JTable transactionsTable;
@@ -24,8 +26,12 @@ public class TransactionsPanel extends JPanel {
     private FinanceData financeData;
     private JButton addButton, deleteButton, saveButton, cancelButton, askAIButton;
     private boolean hasUnsavedChanges = false;
+
+    private String username;
+    private static final Logger LOGGER = Logger.getLogger(TransactionsPanel.class.getName());
     
-    public TransactionsPanel() {
+    public TransactionsPanel(String username) {
+        this.username = username;
         financeData = new FinanceData();
         setLayout(new BorderLayout());
         
@@ -382,9 +388,61 @@ public class TransactionsPanel extends JPanel {
     }
 
     private void loadSavedTransactions() {
-        List<Object[]> savedTransactions = UserBillStorage.loadTransactions();
-        if (!savedTransactions.isEmpty()) {
-            addTransactionsFromCSV(savedTransactions);
+        try {
+            // 确保 UserBillStorage 已初始化
+            if (username != null && !username.isEmpty()) {
+                // 如果尚未初始化，先初始化
+                if (UserBillStorage.getBillFilePath() == null) {
+                    UserBillStorage.setUsername(username);
+                }
+            }
+            
+            // 现在安全地加载交易
+            List<Object[]> savedTransactions = UserBillStorage.loadTransactions();
+            
+            // 添加代码：实际处理加载的交易记录
+            if (savedTransactions != null && !savedTransactions.isEmpty()) {
+                // 清空现有表格数据
+                tableModel.setRowCount(0);
+                
+                // 将加载的交易记录添加到表格模型中
+                for (Object[] transaction : savedTransactions) {
+                    // 假设交易记录的格式是：日期,描述,类别,金额,是否确认
+                    // 我们需要转换格式以匹配表格模型
+                    
+                    // 首先检查是否有足够的数据
+                    if (transaction.length >= 4) {
+                        String date = transaction[0].toString();
+                        String description = transaction[1].toString();
+                        String category = transaction[2].toString();
+                        Double amount = 0.0;
+                        
+                        // 尝试解析金额
+                        try {
+                            if (transaction[3] instanceof Double) {
+                                amount = (Double) transaction[3];
+                            } else {
+                                amount = Double.parseDouble(transaction[3].toString());
+                            }
+                        } catch (NumberFormatException e) {
+                            LOGGER.log(Level.WARNING, "Invalid amount format: " + transaction[3], e);
+                        }
+                        
+                        // 添加到表格模型，最后一列是删除复选框，默认为false
+                        tableModel.addRow(new Object[] {date, description, category, amount, false});
+                    }
+                }
+                
+                LOGGER.log(Level.INFO, "Successfully loaded " + savedTransactions.size() + " transactions");
+            } else {
+                LOGGER.log(Level.WARNING, "No transactions loaded or empty transaction list");
+            }
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error loading transactions", e);
+            JOptionPane.showMessageDialog(this, 
+                "Failed to load transactions: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

@@ -18,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CSVImportDialog extends JDialog {
     private TransactionsPanel parentPanel;
@@ -52,6 +54,8 @@ public class CSVImportDialog extends JDialog {
     
     // 添加对FinanceData的引用
     private FinanceData financeData;
+
+    private static final Logger LOGGER = Logger.getLogger(CSVImportDialog.class.getName());
     
     public CSVImportDialog(Window owner, TransactionsPanel parentPanel, FinanceData financeData) {
         super(owner, "Import Transactions from CSV", ModalityType.APPLICATION_MODAL);
@@ -673,6 +677,9 @@ public class CSVImportDialog extends JDialog {
             // Create transaction row
             Object[] transaction = {formattedDate, description, category, amount, false};
             transactions.add(transaction);
+            LOGGER.log(Level.INFO, "Parsed transaction: {0}", Arrays.toString(transaction));
+
+            /* Jump to here */
         }
         
         // Display warning if some rows were skipped

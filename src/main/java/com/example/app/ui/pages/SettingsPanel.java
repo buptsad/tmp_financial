@@ -47,7 +47,10 @@ public class SettingsPanel extends JPanel {
     // Reference to user settings
     private final UserSettings userSettings;
 
-    public SettingsPanel() {
+    private String username;
+
+    public SettingsPanel(String username) {
+        this.username = username;
         // Get the user settings instance
         userSettings = UserSettings.getInstance();
         LOGGER.log(Level.INFO, "Initializing SettingsPanel with UserSettings");

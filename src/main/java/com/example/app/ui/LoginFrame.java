@@ -1,5 +1,10 @@
 package com.example.app.ui;
 
+import com.example.app.user_data.UserAuthService;
+import com.example.app.user_data.UserBillStorage;
+import com.example.app.user_data.UserSettingsStorage;
+
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -7,8 +12,15 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LoginFrame extends JFrame {
+    private static final Logger LOGGER = Logger.getLogger(LoginFrame.class.getName());
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JPanel cardPanel;
@@ -28,6 +40,9 @@ public class LoginFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 350);
         setLocationRelativeTo(null);
+        
+        // 创建 user_data 基础目录
+        createUserDataBaseDir();
         
         // Create main container with card layout
         cardPanel = new JPanel();
@@ -56,15 +71,29 @@ public class LoginFrame extends JFrame {
         cardPanel.add(loginPanel, "login");
         cardPanel.add(registerPanel, "register");
         
-        // Set up main layout
-        setLayout(new BorderLayout());
-        add(togglePanel, BorderLayout.NORTH);
-        add(cardPanel, BorderLayout.CENTER);
+        // Create main layout
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(togglePanel, BorderLayout.NORTH);
+        mainPanel.add(cardPanel, BorderLayout.CENTER);
+        
+        // Set content pane
+        setContentPane(mainPanel);
         
         // Set active page initially
         setActiveToggle("login");
         
         setVisible(true);
+    }
+    
+    private void createUserDataBaseDir() {
+        File baseDir = new File(".\\user_data");
+        if (!baseDir.exists()) {
+            if (baseDir.mkdirs()) {
+                LOGGER.log(Level.INFO, "Created base user_data directory");
+            } else {
+                LOGGER.log(Level.SEVERE, "Failed to create base user_data directory");
+            }
+        }
     }
     
     private JButton createStyledButton(String text, String pageKey) {
@@ -151,16 +180,40 @@ public class LoginFrame extends JFrame {
         loginPanel.add(loginButton, gbc);
         
         // Add action listener to login button
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // For demo purposes, any login is successful
-                // In a real app, you would validate credentials here
-                MainFrame mainFrame = new MainFrame();
-                mainFrame.setVisible(true);
-                dispose(); // Close the login window
+        loginButton.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            
+            if (UserAuthService.authenticateUser(username, password)) {
+                // 成功认证后，初始化存储服务
+                UserBillStorage.setUsername(username);
+                UserSettingsStorage.setUsername(username);
+                
+                // 创建并显示主窗口
+                dispose();
+                EventQueue.invokeLater(() -> new MainFrame(username).setVisible(true));
+            } else {
+                // 显示错误消息
+                JOptionPane.showMessageDialog(this, "Invalid username or password", 
+                    "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+    
+    private boolean validateUser(String username, String password) {
+        // 验证用户身份
+        boolean isAuthenticated = UserAuthService.authenticateUser(username, password);
+        
+        if (isAuthenticated) {
+            // 成功认证后，初始化存储服务
+            UserBillStorage.setUsername(username);
+            UserSettingsStorage.setUsername(username);
+            
+            // 保存最后一次登录的用户名
+            //saveLastLoginUser(username);
+        }
+        
+        return isAuthenticated;
     }
     
     private void createRegisterPanel() {
@@ -203,33 +256,44 @@ public class LoginFrame extends JFrame {
         gbc.gridy = 2;
         registerPanel.add(emailField, gbc);
         
+        // Phone label and field
+        JLabel phoneLabel = new JLabel("Phone:");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        registerPanel.add(phoneLabel, gbc);
+        
+        JTextField phoneField = new JTextField(15);
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        registerPanel.add(phoneField, gbc);
+        
         // Password label and field
         JLabel passwordLabel = new JLabel("Password:");
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         registerPanel.add(passwordLabel, gbc);
         
         JPasswordField regPasswordField = new JPasswordField(15);
         gbc.gridx = 1;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         registerPanel.add(regPasswordField, gbc);
         
         // Confirm Password label and field
         JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         registerPanel.add(confirmPasswordLabel, gbc);
         
         JPasswordField confirmPasswordField = new JPasswordField(15);
         gbc.gridx = 1;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         registerPanel.add(confirmPasswordField, gbc);
         
         // Register button
         JButton registerButton = new JButton("Register");
         registerButton.setToolTipText("Click to create a new account");
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(15, 0, 0, 0);
         gbc.anchor = GridBagConstraints.CENTER;
@@ -239,20 +303,125 @@ public class LoginFrame extends JFrame {
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // For demo purposes, show a successful registration message
-                // In a real app, you would validate and store the user data
-                JOptionPane.showMessageDialog(
-                    LoginFrame.this,
-                    "Registration successful! You can now login.",
-                    "Account Created",
-                    JOptionPane.INFORMATION_MESSAGE
-                );
+                String username = regUsernameField.getText().trim();
+                String email = emailField.getText().trim();
+                String phone = phoneField.getText().trim();
+                String password = new String(regPasswordField.getPassword());
+                String confirmPassword = new String(confirmPasswordField.getPassword());
                 
-                // Switch to login panel
-                setActiveToggle("login");
-                cardLayout.show(cardPanel, "login");
+                // 简单验证
+                if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                    JOptionPane.showMessageDialog(
+                        LoginFrame.this,
+                        "Please fill in all required fields",
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                
+                if (!password.equals(confirmPassword)) {
+                    JOptionPane.showMessageDialog(
+                        LoginFrame.this,
+                        "Passwords do not match",
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                
+                // 检查用户名是否已存在
+                File userDir = new File(".\\user_data\\" + username);
+                if (userDir.exists()) {
+                    JOptionPane.showMessageDialog(
+                        LoginFrame.this,
+                        "Username already exists. Please choose a different username.",
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                
+                // 创建用户目录和文件
+                if (createUserAccount(username, email, phone, password)) {
+                    JOptionPane.showMessageDialog(
+                        LoginFrame.this,
+                        "Registration successful! You can now login.",
+                        "Account Created",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                    
+                    // 清空注册表单
+                    regUsernameField.setText("");
+                    emailField.setText("");
+                    phoneField.setText("");
+                    regPasswordField.setText("");
+                    confirmPasswordField.setText("");
+                    
+                    // 切换到登录面板
+                    setActiveToggle("login");
+                    cardLayout.show(cardPanel, "login");
+                } else {
+                    JOptionPane.showMessageDialog(
+                        LoginFrame.this,
+                        "Error creating user account. Please try again.",
+                        "Registration Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                }
             }
         });
+    }
+    
+    private boolean createUserAccount(String username, String email, String phone, String password) {
+        try {
+            // 创建用户目录
+            File userDir = new File(".\\user_data\\" + username);
+            if (!userDir.exists() && !userDir.mkdirs()) {
+                LOGGER.log(Level.SEVERE, "Could not create user directory for: {0}", username);
+                return false;
+            }
+            
+            // 创建 user_settings.properties 文件
+            File settingsFile = new File(userDir, "user_settings.properties");
+            Properties properties = new Properties();
+            
+            // 设置用户属性
+            properties.setProperty("user.name", username);
+            properties.setProperty("user.email", email);
+            properties.setProperty("user.phone", phone);
+            properties.setProperty("security.password.hash", password);
+            
+            // 设置默认属性
+            properties.setProperty("currency.code", "USD");
+            properties.setProperty("currency.symbol", "$");
+            properties.setProperty("theme.dark", "false");
+            properties.setProperty("notifications.budget.enabled", "true");
+            properties.setProperty("notifications.transaction.enabled", "true");
+            
+            // 保存属性文件
+            try (FileOutputStream fos = new FileOutputStream(settingsFile)) {
+                properties.store(fos, "Financial App User Settings");
+            }
+            
+            // 创建空的 user_bill.csv 文件
+            File billsFile = new File(userDir, "user_bill.csv");
+            try (FileOutputStream fos = new FileOutputStream(billsFile)) {
+                fos.write("Date,Description,Category,Amount,Confirmed\n".getBytes());
+            }
+            
+            // 创建空的 user_budgets.csv 文件
+            File budgetsFile = new File(userDir, "user_budgets.csv");
+            try (FileOutputStream fos = new FileOutputStream(budgetsFile)) {
+                fos.write("Category,Amount,StartDate,EndDate\n".getBytes());
+            }
+            
+            LOGGER.log(Level.INFO, "Created user account for: {0}", username);
+            return true;
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Error creating user account", ex);
+            return false;
+        }
     }
     
     // Main method for testing
