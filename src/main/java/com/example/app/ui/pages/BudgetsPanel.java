@@ -5,14 +5,19 @@ import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import com.example.app.ui.dashboard.BudgetCategoryPanel;
 import com.example.app.ui.dashboard.BudgetDialog;
+import com.example.app.ui.pages.AI.getRes;
 import com.example.app.model.CSVDataImporter;
 import com.example.app.model.DataRefreshListener;
 import com.example.app.model.DataRefreshManager;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+
+import org.json.JSONObject;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -265,30 +270,79 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener, Data
     
     private Map<String, Double> generateSuggestedBudgets(Map<String, Double> currentBudgets, double totalBudget) {
         Map<String, Double> suggestedBudgets = new LinkedHashMap<>();
-        List<String> categories = new ArrayList<>(currentBudgets.keySet());
-        
-        // First pass: assign random percentages that sum to 100%
-        double[] percentages = new double[categories.size()];
-        double sum = 0;
-        
-        for (int i = 0; i < percentages.length; i++) {
-            // Generate random percentage between 5-25
-            percentages[i] = 5 + random.nextDouble() * 20;
-            sum += percentages[i];
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Double> e : currentBudgets.entrySet()) {
+            sb.append(e.getKey())
+            .append(": ")
+            .append(e.getValue())
+            .append("; ");
         }
-        
-        // Normalize percentages to sum to 100%
-        for (int i = 0; i < percentages.length; i++) {
-            percentages[i] = percentages[i] / sum * 100;
+        if (sb.length() >= 2) {
+            sb.setLength(sb.length() - 2);  // 去掉末尾的 "; "
         }
-        
-        // Convert percentages to budget amounts
-        for (int i = 0; i < categories.size(); i++) {
-            String category = categories.get(i);
-            double amount = totalBudget * percentages[i] / 100;
-            suggestedBudgets.put(category, Math.round(amount * 100) / 100.0); // Round to 2 decimals
+        String budgetString = sb.toString();
+        System.out.println(budgetString);
+        String aiPrompt = String.format(
+            "当前预算分配如下：%s。总预算为 %.2f。"
+        + " 请在总金额不变的情况下，将总预算在各类中重新分配，给出一个更合理的预算分配方案。"
+        + " 请以 JSON 格式输出，键是类别名称，值是对应金额，此外不要输出其它任何内容。",
+            budgetString,
+            totalBudget
+        );
+
+        String API_KEY;
+        String response;
+        try {
+        API_KEY = "sk-fdf26a37926f46ab8d4884c2cd533db8";
+        response = new getRes().getResponse(API_KEY, aiPrompt);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        
+        String res = null;
+        try {
+            res = new getRes().parseAIResponse(response);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(res);
+        // 1. trim 空白
+        res = res.trim();
+
+        // 2. 去掉开头的 ``` 及可选语言标识
+        if (res.startsWith("```")) {
+            int firstNewline = res.indexOf('\n');
+            if (firstNewline != -1) {
+                res = res.substring(firstNewline + 1).trim();
+            } else {
+                // 整个字符串只有 ```？ 那就清空
+                res = "";
+            }
+        }
+        // 3. 去掉结尾的 ```
+        if (res.endsWith("```")) {
+            int lastBackticks = res.lastIndexOf("```");
+            res = res.substring(0, lastBackticks).trim();
+        }
+
+        // 4. 若还有 "json" 前缀，一并去掉
+        if (res.startsWith("json")) {
+            int brace = res.indexOf('{');
+            if (brace != -1) {
+                res = res.substring(brace).trim();
+            }
+        }
+        // 5. 再用 org.json 解析
+        try {
+            JSONObject json = new JSONObject(res);
+            for (String category : currentBudgets.keySet()) {
+                double val = json.has(category)
+                        ? json.getDouble(category)
+                        : currentBudgets.get(category);
+                suggestedBudgets.put(category, val);
+            }
+        } catch (Exception e) {
+            System.err.println("解析 AI JSON 失败: " + e.getMessage());
+        }
         return suggestedBudgets;
     }
     
@@ -466,3 +520,5 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener, Data
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
     }
 }
+
+
