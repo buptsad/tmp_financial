@@ -57,7 +57,24 @@ public class FinanceData {
     
     // Method to import transactions from CSV
     public void importTransactions(List<Object[]> importedTransactions) {
-        // 首先清除现有数据
+        // First, make sure we have some budget categories
+        if (categoryBudgets.isEmpty()) {
+            // Try loading from file
+            if (dataDirectory != null) {
+                Map<String, Double> loadedBudgets = BudgetManager.loadBudgetsFromCSV(dataDirectory);
+                if (!loadedBudgets.isEmpty()) {
+                    categoryBudgets.putAll(loadedBudgets);
+                } else {
+                    // Initialize with default values if no file exists
+                    initializeDefaultBudgets();
+                }
+            } else {
+                // No directory set, use defaults
+                initializeDefaultBudgets();
+            }
+        }
+        
+        // Now continue with transaction import as before
         dailyIncomes.clear();
         dailyExpenses.clear();
         dailyIncomeDescriptions.clear();
@@ -123,6 +140,18 @@ public class FinanceData {
         allocateBudgets(expenseCategories);
     }
     
+    // Add this new method to initialize default budget categories
+    private void initializeDefaultBudgets() {
+        categoryBudgets.put("Housing", 1400.00);
+        categoryBudgets.put("Food", 800.00);
+        categoryBudgets.put("Transportation", 400.00);
+        categoryBudgets.put("Entertainment", 250.00);
+        categoryBudgets.put("Shopping", 400.00);
+        categoryBudgets.put("Service", 350.00);
+        categoryBudgets.put("Gift", 200.00);
+        categoryBudgets.put("Other", 200.00);
+    }
+    
     // 根据收集到的类别自动分配预算
     private void allocateBudgets(Set<String> expenseCategories) {
         double totalBudget = MONTHLY_BUDGET;
@@ -176,61 +205,21 @@ public class FinanceData {
     }
     
     private String determineIncomeCategory(String description, String csvCategory) {
-        // 根据描述和CSV类别确定收入类别
-        description = description.toLowerCase();
-        
-        if (description.contains("工资") || description.contains("薪水") || description.contains("salary")) {
-            return "Salary";
-        } else if (description.contains("转账") && !description.contains("零钱通")) {
-            return "Transfer";
-        } else if (description.contains("投资") || description.contains("股息") || description.contains("dividend")) {
-            return "Investment";
-        } else if (description.contains("退款") || description.contains("refund")) {
-            return "Refund";
-        } else if (description.contains("零钱通")) {
-            return "Savings";
+        // for those with categories not in budget categories, categorize them into "Other"
+        System.err.println("Current budget categories: " + categoryBudgets.keySet());
+        if (!categoryBudgets.containsKey(csvCategory)) {
+            return "Other";
         }
-        
-        // 默认类别
-        return "Other Income";
+        else return csvCategory;
     }
     
     private String determineExpenseCategory(String description, String csvCategory) {
-        // 根据描述和CSV类别确定支出类别
-        description = description.toLowerCase();
-        csvCategory = csvCategory.toLowerCase();
-        
-        // 不同的分类逻辑
-        if (csvCategory.contains("群收款")) {
-            return "Entertainment";
-        } else if (description.contains("红包")) {
-            return "Gift";
-        } else if (csvCategory.contains("商户消费")) {
-            if (description.contains("超市") || description.contains("食品") || 
-                description.contains("饭") || description.contains("餐")) {
-                return "Food";
-            } else if (description.contains("交通") || description.contains("车")) {
-                return "Transportation";
-            } else if (description.contains("医") || description.contains("药")) {
-                return "Healthcare";
-            }
-            return "Shopping"; // 默认商户消费归为购物类
-        } else if (csvCategory.contains("扫二维码付款")) {
-            return "Service";
+        // for those with catagories not in budget categories, catagorize them into "Other"
+        // categoryBudgets has all categories
+        if (!categoryBudgets.containsKey(csvCategory)) {
+            return "Other";
         }
-        
-        // 更具体的类别判断
-        if (description.contains("房租") || description.contains("水电") || description.contains("物业")) {
-            return "Housing";
-        } else if (description.contains("电话") || description.contains("网络")) {
-            return "Utilities";
-        } else if (description.contains("医") || description.contains("药") || 
-                   description.contains("hospital") || description.contains("clinic")) {
-            return "Healthcare";
-        }
-        
-        // 默认类别
-        return "Other";
+        else return csvCategory;
     }
     
     // 其他方法保持不变...

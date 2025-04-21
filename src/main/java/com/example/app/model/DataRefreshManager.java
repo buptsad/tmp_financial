@@ -15,7 +15,7 @@ public class DataRefreshManager {
     private final List<DataRefreshListener> listeners;
     
     // Add this field to prevent recursive refresh calls
-    private boolean refreshInProgress = false;
+    private volatile boolean refreshInProgress = false;
     
     // Enum for different types of data that could be refreshed
     public enum RefreshType {
