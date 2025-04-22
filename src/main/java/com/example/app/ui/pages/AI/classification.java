@@ -27,7 +27,7 @@ public class classification {
     public String getResponse(String apiKey, String prompt) throws IOException {
         // 构建请求体
         
-        prompt = "请你根据以下的账单信息，将这些交易中的每一笔交易归于{Gift,Entertainment,Service,Shopping,Other}中的一类。示例输入如下：2025-04-14,风味餐厅,商户消费,-15.00\r\n2025-04-14,微信转账,红包,12.00\r\n\r\n示例输出字符串如下，类别中间以逗号隔开：Food,Other，如果不属于任何类别归类为Other.除此之外不允许包含其它任何的内容" + prompt;
+        prompt = "请你根据以下的账单信息，将这些交易中的每一笔交易归于{Gift,Entertainment,Service,Shopping,Other,Food}中的一类。示例输入如下：2025-04-14,风味餐厅,商户消费,-15.00\r\n2025-04-14,微信转账,红包,12.00\r\n\r\n示例输出字符串如下，类别中间以逗号隔开：Food,Other，如果不属于任何类别归类为Other.除此之外不允许包含其它任何的内容" + prompt;
         DeepseekRequest.Message message = DeepseekRequest.Message.builder()
                 .role("user")
                 .content(prompt)

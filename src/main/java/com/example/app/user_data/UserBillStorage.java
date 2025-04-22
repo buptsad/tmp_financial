@@ -175,35 +175,63 @@ public class UserBillStorage {
             // 写入CSV表头
             writer.println(CSV_HEADER);
             
-            // 使用第一个交易记录进行分类
-            String[] categories = null;
-            StringBuilder stringTransactions = new StringBuilder();
-            if (!transactions.isEmpty()) {
-                StringBuilder stringTransaction = new StringBuilder();
-                for (Object[] transaction : transactions) {
+            // 如果没有交易记录，直接返回
+            if (transactions.isEmpty()) {
+                LOGGER.log(Level.INFO, "No transactions to save");
+                return true;
+            }
+            
+            // 分批处理交易记录，每批20条
+            final int BATCH_SIZE = 20;
+            List<String> allCategories = new ArrayList<>();
+            
+            for (int batchStart = 0; batchStart < transactions.size(); batchStart += BATCH_SIZE) {
+                int batchEnd = Math.min(batchStart + BATCH_SIZE, transactions.size());
+                List<Object[]> batchTransactions = transactions.subList(batchStart, batchEnd);
+                
+                // 构建当前批次的交易数据字符串
+                StringBuilder stringTransactions = new StringBuilder();
+                for (Object[] transaction : batchTransactions) {
                     String dateStr = (String) transaction[0];
                     String description = escapeCSV((String) transaction[1]);
                     String category = escapeCSV((String) transaction[2]);
                     String amount = String.valueOf(transaction[3]);
-
-                    //stringTransaction = dateStr + " " + description + " " + category + " " + amount;
-                    stringTransaction.append(dateStr).append(",").append(description).append(",").append(category).append(",").append(amount);
+                    
+                    stringTransactions.append(dateStr).append(",")
+                                     .append(description).append(",")
+                                     .append(category).append(",")
+                                     .append(amount).append("\r\n");
                 }
-                stringTransactions.append(stringTransaction);
-                stringTransactions.append("\r\n");
-            }
-            System.out.println("交易记录: " + stringTransactions);
-            if (!transactions.isEmpty()) {
+                
+                System.out.println("处理第 " + (batchStart/BATCH_SIZE + 1) + " 批交易记录: " + batchTransactions.size() + " 条");
+                
+                // 调用API进行分类
                 String response = classify.getResponse(API_KEY, stringTransactions.toString());
                 System.out.println("AI Response: " + response);
-
+                
                 response = new classification().parseAIResponse(response);
                 System.out.println("Parsed AI Response: " + response);
-                categories = response.split(",");
-            } else {
-                categories = new String[]{"other"}; // 提供一个默认值，以防列表为空
+                
+                // 保存这批次的分类结果
+                String[] batchCategories = response.split(",");
+                for (String category : batchCategories) {
+                    allCategories.add(category);
+                }
+                
+                System.out.println("当前批次分类结果: ");
+                for (String category : batchCategories) {
+                    System.out.print(category + " ");
+                }
+                System.out.println();
             }
-            System.out.println("分类结果: " );
+            
+            // 使用收集到的所有分类写入交易记录
+            String[] categories = allCategories.toArray(new String[0]);
+            if (categories.length == 0) {
+                categories = new String[]{"other"}; // 提供默认值
+            }
+            
+            System.out.println("全部分类结果: ");
             for (String category : categories) {
                 System.out.print(category + " ");
             }
