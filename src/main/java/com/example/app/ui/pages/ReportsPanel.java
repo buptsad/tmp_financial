@@ -131,7 +131,7 @@ public class ReportsPanel extends JPanel implements DataRefreshListener {
         panel.add(applyButton);
         
         // 添加加载数据按钮
-        JButton loadDataButton = new JButton("加载交易数据");
+        JButton loadDataButton = new JButton("Load Data");
         loadDataButton.setAlignmentX(LEFT_ALIGNMENT);
         loadDataButton.setMaximumSize(new Dimension(220, 35));
         panel.add(loadDataButton);

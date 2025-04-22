@@ -2,6 +2,7 @@ package com.example.app.ui.pages.AI;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,10 +24,10 @@ public class classification {
      */
     private static String API_KEY = "sk-fdf26a37926f46ab8d4884c2cd533db8";
     private final RestTemplate restTemplate = new RestTemplate();
-
     public String getResponse(String apiKey, String prompt) throws IOException {
         // 构建请求体
-        prompt = "请你根据以下的账单信息，将这笔交易归于{Houseing、Food、Transportation、Utilities、Entertainment、Healthcare、Other}中的一类。你的输出除了类别的一个单词外，不允许包含其它任何的内容" + prompt;
+        
+        prompt = "请你根据以下的账单信息，将这些交易中的每一笔交易归于{Gift,Entertainment,Service,Shopping,Other}中的一类。示例输入如下：2025-04-14,风味餐厅,商户消费,-15.00\r\n2025-04-14,微信转账,红包,12.00\r\n\r\n示例输出字符串如下，类别中间以逗号隔开：Food,Other，如果不属于任何类别归类为Other.除此之外不允许包含其它任何的内容" + prompt;
         DeepseekRequest.Message message = DeepseekRequest.Message.builder()
                 .role("user")
                 .content(prompt)
@@ -56,7 +57,7 @@ public class classification {
         }
         throw new IOException("Unexpected status code" );
     }
-    private String parseAIResponse(String jsonResponse) {
+    public String parseAIResponse(String jsonResponse) {
         try {
             JSONObject root = new JSONObject(jsonResponse);
             JSONArray choices = root.getJSONArray("choices");

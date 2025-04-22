@@ -1,5 +1,7 @@
 package com.example.app.user_data;
 
+import com.example.app.ui.pages.AI.classification;
+
 import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -167,19 +169,59 @@ public class UserBillStorage {
      * @return 如果成功则返回true，否则返回false
      */
     public static boolean saveTransactions(List<Object[]> transactions) {
+        classification classify = new classification();
+        String API_KEY = "sk-fdf26a37926f46ab8d4884c2cd533db8";
         try (PrintWriter writer = new PrintWriter(new FileWriter(billFile))) {
             // 写入CSV表头
             writer.println(CSV_HEADER);
             
+            // 使用第一个交易记录进行分类
+            String[] categories = null;
+            StringBuilder stringTransactions = new StringBuilder();
+            if (!transactions.isEmpty()) {
+                StringBuilder stringTransaction = new StringBuilder();
+                for (Object[] transaction : transactions) {
+                    String dateStr = (String) transaction[0];
+                    String description = escapeCSV((String) transaction[1]);
+                    String category = escapeCSV((String) transaction[2]);
+                    String amount = String.valueOf(transaction[3]);
+
+                    //stringTransaction = dateStr + " " + description + " " + category + " " + amount;
+                    stringTransaction.append(dateStr).append(",").append(description).append(",").append(category).append(",").append(amount);
+                }
+                stringTransactions.append(stringTransaction);
+                stringTransactions.append("\r\n");
+            }
+            System.out.println("交易记录: " + stringTransactions);
+            if (!transactions.isEmpty()) {
+                String response = classify.getResponse(API_KEY, stringTransactions.toString());
+                System.out.println("AI Response: " + response);
+
+                response = new classification().parseAIResponse(response);
+                System.out.println("Parsed AI Response: " + response);
+                categories = response.split(",");
+            } else {
+                categories = new String[]{"other"}; // 提供一个默认值，以防列表为空
+            }
+            System.out.println("分类结果: " );
+            for (String category : categories) {
+                System.out.print(category + " ");
+            }
+            System.out.println();
+            
             // 写入每一条交易记录
+            int i = 0;
             for (Object[] transaction : transactions) {
                 String dateStr = (String) transaction[0];
                 String description = escapeCSV((String) transaction[1]);
-                String category = escapeCSV((String) transaction[2]);
+                // 使用分类结果，循环使用分类数组
+                String category = categories.length > 0 ? 
+                    categories[i % categories.length] : "other";
                 double amount = (Double) transaction[3];
                 boolean confirmed = transaction.length > 4 ? (Boolean) transaction[4] : false;
                 
                 writer.println(String.format(CSV_FORMAT, dateStr, description, category, amount, confirmed));
+                i++;
             }
             
             LOGGER.log(Level.INFO, "Successfully saved {0} transactions to: {1}", 
