@@ -1,46 +1,34 @@
 package com.example.app.ui.dashboard;
 
-import com.example.app.model.CSVDataImporter;
-import com.example.app.model.FinanceData;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
-import com.example.app.model.DataRefreshListener;
-import com.example.app.model.DataRefreshManager;
+import com.example.app.viewmodel.dashboard.DashboardBudgetsViewModel;
+import com.example.app.viewmodel.dashboard.DashboardBudgetsViewModel.BudgetChangeListener;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.CurrencyChangeListener, DataRefreshListener {
+public class DashboardBudgetsPanel extends JPanel implements CurrencyChangeListener, BudgetChangeListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardBudgetsPanel.class.getName());
     
-    private FinanceData financeData;
+    // ViewModel reference
+    private final DashboardBudgetsViewModel viewModel;
+    
+    // UI components
     private final JPanel categoriesPanel;
-    private String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
-    private String username; // 存储当前用户名
-    private String userDataPath; // 存储用户特定的数据路径
+    private String currencySymbol;
     
     public DashboardBudgetsPanel(String username) {
-        this.username = username;
-        this.userDataPath = ".\\user_data\\" + username; // 设置用户特定的数据路径
+        // Initialize ViewModel
+        this.viewModel = new DashboardBudgetsViewModel(username);
+        this.viewModel.addBudgetChangeListener(this);
         
-        // 初始化财务数据
-        financeData = new FinanceData();
+        // Initialize currency symbol
+        this.currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         
-        // 设置用户特定的数据目录
-        financeData.setDataDirectory(userDataPath);
-        
-        LOGGER.log(Level.INFO, "正在为用户 {0} 加载预算数据，路径: {1}", new Object[]{username, userDataPath});
-        
-        // 先加载交易数据
-        loadTransactionData();
-        
-        // 再加载预算数据
-        financeData.loadBudgets();
-        
+        // Set up UI
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
@@ -52,7 +40,7 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         
         // Overall budget progress
         JPanel overallPanel = new JPanel(new BorderLayout());
-        double overallPercentage = financeData.getOverallBudgetPercentage();
+        double overallPercentage = viewModel.getOverallBudgetPercentage();
         JLabel overallLabel = new JLabel(String.format("Overall Budget: %.2f%% used", overallPercentage));
         overallLabel.setFont(new Font(overallLabel.getFont().getName(), Font.BOLD, 14));
         overallPanel.add(overallLabel, BorderLayout.NORTH);
@@ -77,47 +65,15 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
         
-        // 注册货币变化监听器
+        // Register as listeners
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
-        
-        // Register as listener for data refresh events
-        DataRefreshManager.getInstance().addListener(this);
-    }
-    
-    /**
-     * 从用户特定的CSV文件加载交易数据
-     */
-    private void loadTransactionData() {
-        String csvFilePath = userDataPath + "\\user_bill.csv";
-        List<Object[]> transactions = CSVDataImporter.importTransactionsFromCSV(csvFilePath);
-        
-        if (!transactions.isEmpty()) {
-            financeData.importTransactions(transactions);
-            LOGGER.log(Level.INFO, "用户 {0}: 成功导入 {1} 条交易记录", new Object[]{username, transactions.size()});
-        } else {
-            LOGGER.log(Level.WARNING, "用户 {0}: 没有交易记录被导入", username);
-        }
-    }
-    
-    /**
-     * 打开完整预算面板
-     */
-    private void openFullBudgetPanel() {
-        Window window = SwingUtilities.getWindowAncestor(this);
-        if (window instanceof JFrame) {
-            JFrame frame = (JFrame) window;
-            // 这里可以添加导航到完整BudgetsPanel的代码
-            JOptionPane.showMessageDialog(frame, 
-                "查看完整预算管理", 
-                "导航", JOptionPane.INFORMATION_MESSAGE);
-        }
     }
     
     private void updateCategoryPanels() {
         categoriesPanel.removeAll();
         
-        Map<String, Double> budgets = financeData.getCategoryBudgets();
-        Map<String, Double> expenses = financeData.getCategoryExpenses();
+        Map<String, Double> budgets = viewModel.getCategoryBudgets();
+        Map<String, Double> expenses = viewModel.getCategoryExpenses();
         
         for (String category : budgets.keySet()) {
             double budget = budgets.get(category);
@@ -155,27 +111,8 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         return progressBar;
     }
     
-    private void addNewCategory() {
-        BudgetDialog dialog = new BudgetDialog(SwingUtilities.getWindowAncestor(this), "Add Category", "", 0.0);
-        if (dialog.showDialog()) {
-            String category = dialog.getCategory();
-            double budget = dialog.getBudget();
-            
-            // 更新财务数据并保存到CSV文件
-            financeData.updateCategoryBudget(category, budget);
-            
-            // 更新UI
-            updateCategoryPanels();
-            
-            JOptionPane.showMessageDialog(this, 
-                    "新类别已添加: " + category + " 预算: " + currencySymbol + budget,
-                    "类别已添加", 
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-    
     private void editCategory(String category) {
-        double currentBudget = financeData.getCategoryBudget(category);
+        double currentBudget = viewModel.getCategoryBudget(category);
         BudgetDialog dialog = new BudgetDialog(
                 SwingUtilities.getWindowAncestor(this), 
                 "Edit Category", 
@@ -185,11 +122,8 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         if (dialog.showDialog()) {
             double newBudget = dialog.getBudget();
             
-            // 更新财务数据并保存到CSV文件
-            financeData.updateCategoryBudget(category, newBudget);
-            
-            // 更新UI
-            updateCategoryPanels();
+            // Update through view model
+            viewModel.updateCategoryBudget(category, newBudget);
             
             JOptionPane.showMessageDialog(this, 
                     "类别已更新: " + category + " 新预算: " + currencySymbol + newBudget,
@@ -208,11 +142,8 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
         );
         
         if (result == JOptionPane.YES_OPTION) {
-            // 从财务数据中删除类别并保存到CSV文件
-            if (financeData.deleteCategoryBudget(category)) {
-                // 更新UI
-                updateCategoryPanels();
-                
+            // Delete through view model
+            if (viewModel.deleteCategoryBudget(category)) {
                 JOptionPane.showMessageDialog(this, 
                         "类别已删除: " + category,
                         "类别已删除", 
@@ -220,54 +151,73 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyManager.Cur
             }
         }
     }
+    
+    private void addNewCategory() {
+        BudgetDialog dialog = new BudgetDialog(
+                SwingUtilities.getWindowAncestor(this), 
+                "Add Category", 
+                "", 
+                0.0);
+                
+        if (dialog.showDialog()) {
+            String category = dialog.getCategory();
+            double budget = dialog.getBudget();
+            
+            // Update through view model
+            viewModel.updateCategoryBudget(category, budget);
+            
+            JOptionPane.showMessageDialog(this, 
+                    "新类别已添加: " + category + " 预算: " + currencySymbol + budget,
+                    "类别已添加", 
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
 
     @Override
     public void onCurrencyChanged(String currencyCode, String currencySymbol) {
         this.currencySymbol = currencySymbol;
-        categoriesPanel.removeAll();
         updateCategoryPanels();
-        revalidate();
-        repaint();
     }
     
     @Override
-    public void onDataRefresh(DataRefreshManager.RefreshType type) {
-        if (type == DataRefreshManager.RefreshType.TRANSACTIONS || 
-            type == DataRefreshManager.RefreshType.BUDGETS || 
-            type == DataRefreshManager.RefreshType.ALL) {
-            
-            // Reload data if needed
-            if (type == DataRefreshManager.RefreshType.TRANSACTIONS) {
-                loadTransactionData();
-            }
-            else if (type == DataRefreshManager.RefreshType.BUDGETS) {
-                financeData.loadBudgets();
-            }
-            
-            // Update the UI
-            updateCategoryPanels();
-        }
+    public void onBudgetDataChanged() {
+        // Update UI when view model notifies of budget changes
+        updateCategoryPanels();
     }
     
     @Override
     public void removeNotify() {
         super.removeNotify();
-        // Unregister from all listeners
+        // Clean up when panel is removed from UI
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
-        DataRefreshManager.getInstance().removeListener(this);
+        viewModel.removeBudgetChangeListener(this);
+        viewModel.cleanup();
     }
     
-    // 提供一个公共方法来更新用户名和对应的数据路径
+    // Public method to update username if needed
     public void setUsername(String username) {
-        this.username = username;
-        this.userDataPath = ".\\user_data\\" + username;
+        // In MVVM, we'd create a new ViewModel for the new user
+        // For simplicity, we'll replace the entire panel in the parent component
         
-        // 更新数据路径并重新加载数据
-        financeData.setDataDirectory(userDataPath);
-        loadTransactionData();
-        financeData.loadBudgets();
-        
-        // 更新UI
-        updateCategoryPanels();
+        // Let the parent container know that it needs to recreate this panel
+        Container parent = getParent();
+        if (parent != null) {
+            parent.remove(this);
+            parent.add(new DashboardBudgetsPanel(username));
+            parent.revalidate();
+            parent.repaint();
+        }
+    }
+    
+    // Add a button to open the full budget panel view
+    private void openFullBudgetPanel() {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            // Code to navigate to the full BudgetsPanel would go here
+            JOptionPane.showMessageDialog(frame, 
+                "Navigate to full Budget Management", 
+                "Navigation", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.app.ui.reports;
 
-import com.example.app.model.FinanceData;
+import com.example.app.viewmodel.reports.CategoryBreakdownViewModel;
+import com.example.app.viewmodel.reports.CategoryBreakdownViewModel.ChartDataChangeListener;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
 import org.jfree.chart.ChartFactory;
@@ -14,60 +15,46 @@ import org.jfree.data.general.DefaultPieDataset;
 import javax.swing.*;
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.util.Map;
 
-public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeListener {
-    
-    private final FinanceData financeData;
+public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
+    private final CategoryBreakdownViewModel viewModel;
     private ChartPanel chartPanel;
     private String timeRange = "Last 30 days";
-    
-    public CategoryBreakdownPanel(FinanceData financeData) {
-        this.financeData = financeData;
-        
+
+    public CategoryBreakdownPanel(CategoryBreakdownViewModel viewModel) {
+        this.viewModel = viewModel;
+        this.viewModel.addChangeListener(this);
+
         setLayout(new BorderLayout());
-        
-        // Create the chart
         JFreeChart chart = createChart();
         chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(700, 500));
         chartPanel.setMouseWheelEnabled(true);
-        
+
         add(chartPanel, BorderLayout.CENTER);
-        
-        // 注册货币变化监听器
+
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
-    
+
     private JFreeChart createChart() {
         DefaultPieDataset dataset = createDataset();
-
         String title = "Expense Breakdown by Category (" + timeRange + ")";
         JFreeChart chart = ChartFactory.createPieChart(
-                title,
-                dataset,
-                true,
-                true,
-                false
+                title, dataset, true, true, false
         );
-        
-        // Customize the plot
         PiePlot plot = (PiePlot) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setShadowPaint(null);
-        
-        // Use colors for categories
+
         int index = 0;
-        for (String category : financeData.getCategoryBudgets().keySet()) {
+        for (String category : viewModel.getCategoryBudgets().keySet()) {
             plot.setSectionPaint(category, getColorForIndex(index));
             index++;
         }
-        
+
         String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
-        
-        // Customize labels
         PieSectionLabelGenerator labelGenerator = new StandardPieSectionLabelGenerator(
                 "{0}: " + currencySymbol + "{1} ({2})",
                 new DecimalFormat("0.00"),
@@ -77,24 +64,19 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         plot.setLabelBackgroundPaint(new Color(255, 255, 255, 200));
         plot.setLabelOutlinePaint(null);
         plot.setLabelShadowPaint(null);
-        
+
         return chart;
     }
-    
+
     private DefaultPieDataset createDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
-        
-        // Get category data
-        Map<String, Double> categoryExpenses = financeData.getCategoryExpenses();
-        
-        // Add each category to the dataset
+        Map<String, Double> categoryExpenses = viewModel.getCategoryExpenses();
         for (Map.Entry<String, Double> entry : categoryExpenses.entrySet()) {
             dataset.setValue(entry.getKey(), entry.getValue());
         }
-        
         return dataset;
     }
-    
+
     private Color getColorForIndex(int index) {
         Color[] colors = {
             new Color(65, 105, 225),  // Royal Blue
@@ -105,14 +87,13 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
             new Color(220, 20, 60),   // Crimson
             new Color(0, 139, 139)    // Dark Cyan
         };
-        
         return colors[index % colors.length];
     }
-    
+
     public void setTimeRange(String timeRange) {
         this.timeRange = timeRange;
     }
-    
+
     public void refreshChart() {
         JFreeChart chart = createChart();
         chartPanel.setChart(chart);
@@ -121,14 +102,19 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
 
     @Override
     public void onCurrencyChanged(String currencyCode, String currencySymbol) {
-        // 货币变化时刷新图表
         refreshChart();
     }
-    
+
+    @Override
+    public void onChartDataChanged() {
+        SwingUtilities.invokeLater(this::refreshChart);
+    }
+
     @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        viewModel.removeChangeListener(this);
+        viewModel.cleanup();
     }
 }
