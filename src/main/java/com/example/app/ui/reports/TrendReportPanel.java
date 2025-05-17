@@ -1,8 +1,10 @@
 package com.example.app.ui.reports;
 
-import com.example.app.model.FinanceData;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
+import com.example.app.viewmodel.reports.TrendReportViewModel;
+import com.example.app.viewmodel.reports.TrendReportViewModel.ChartDataChangeListener;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -17,19 +19,19 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 
-public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
+public class TrendReportPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
     
-    private final FinanceData financeData;
+    private final TrendReportViewModel viewModel;
     private ChartPanel chartPanel;
     private String timeRange = "Last 30 days";
     private String interval = "Daily";
     
-    public TrendReportPanel(FinanceData financeData) {
-        this.financeData = financeData;
+    public TrendReportPanel(TrendReportViewModel viewModel) {
+        this.viewModel = viewModel;
+        this.viewModel.addChangeListener(this);
         
         setLayout(new BorderLayout());
         
@@ -41,14 +43,14 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
         
         add(chartPanel, BorderLayout.CENTER);
         
-        // 注册货币变化监听器
+        // Register as currency change listener
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
     
     private JFreeChart createChart() {
         XYDataset dataset = createDataset();
         
-        // 获取当前货币符号
+        // Get current currency symbol
         String currencySymbol = CurrencyManager.getInstance().getCurrencySymbol();
         
         String title = "Financial Trends - " + interval + " (" + timeRange + ")";
@@ -99,10 +101,10 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
         TimeSeries expensesSeries = new TimeSeries("Expenses");
         TimeSeries budgetSeries = new TimeSeries("Budget");
         
-        // Get data from the model
-        List<LocalDate> dates = financeData.getDates();
-        Map<LocalDate, Double> incomes = financeData.getDailyIncomes();
-        Map<LocalDate, Double> expenses = financeData.getDailyExpenses();
+        // Get data from the ViewModel
+        List<LocalDate> dates = viewModel.getDates();
+        Map<LocalDate, Double> incomes = viewModel.getDailyIncomes();
+        Map<LocalDate, Double> expenses = viewModel.getDailyExpenses();
         
         // Filter dates based on time range
         LocalDate endDate = LocalDate.now();
@@ -183,10 +185,10 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
     }
     
     private double calculateBudgetForPeriod(RegularTimePeriod period) {
-        double monthlyBudget = financeData.getMonthlyBudget();
+        double monthlyBudget = viewModel.getMonthlyBudget();
         
         if (period instanceof Day) {
-            return financeData.getDailyBudget();
+            return viewModel.getDailyBudget();
         } else if (period instanceof Week) {
             return monthlyBudget / 4.33;  // Average weeks per month
         } else if (period instanceof Month) {
@@ -263,14 +265,22 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener {
 
     @Override
     public void onCurrencyChanged(String currencyCode, String currencySymbol) {
-        // 货币变化时刷新图表
+        // Refresh chart when currency changes
         refreshChart();
+    }
+    
+    @Override
+    public void onChartDataChanged() {
+        // Called by ViewModel when data changes
+        SwingUtilities.invokeLater(this::refreshChart);
     }
     
     @Override
     public void removeNotify() {
         super.removeNotify();
-        // 移除组件时取消监听
+        // Clean up when panel is removed
         CurrencyManager.getInstance().removeCurrencyChangeListener(this);
+        viewModel.removeChangeListener(this);
+        viewModel.cleanup();
     }
 }
