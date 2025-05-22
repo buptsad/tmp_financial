@@ -742,14 +742,14 @@ public class CSVImportDialog extends JDialog {
                     dateFormatCombo.setSelectedItem("yyyy/M/d HH:mm"); // 修改为适应 2025/4/14 12:19 的格式
                     
                     // Column mappings
-                    setComboBoxItem(dateColumnCombo, "Transaction Time");
-                    setComboBoxItem(descriptionColumnCombo, "Product");
-                    categoryColumnCombo.setSelectedIndex(0); // Default/empty
-                    setComboBoxItem(amountColumnCombo, "Amount");
+                    setComboBoxItem(dateColumnCombo, "交易时间");
+                    setComboBoxItem(descriptionColumnCombo, "商品");
+                    setComboBoxItem(categoryColumnCombo, "交易类型");
+                    setComboBoxItem(amountColumnCombo, "金额(元)");
                     
                     // Transaction type settings
                     useTypeColumnCheckBox.setSelected(true);
-                    setComboBoxItem(typeColumnCombo, "Income/Expense");
+                    setComboBoxItem(typeColumnCombo, "收/支");
                     typeColumnCombo.setEnabled(true);
                     
                     // Set identifiers
@@ -797,7 +797,7 @@ public class CSVImportDialog extends JDialog {
         // If no exact match, try to find an item that contains the text
         for (int i = 0; i < comboBox.getItemCount(); i++) {
             String itemText = comboBox.getItemAt(i);
-            if (!itemText.isEmpty() && itemText.toLowerCase().contains(text.toLowerCase())) {
+            if (!itemText.isEmpty() && itemText.contains(text)) {
                 comboBox.setSelectedIndex(i);
                 return;
             }
