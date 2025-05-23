@@ -45,7 +45,8 @@ public class OverviewViewModel implements DataRefreshListener {
         
         // Initialize the financial advice with username
         financialAdvice.initialize(username);
-        
+        financialAdvice.setFinanceData(financeData);
+
         // Register for data refresh events
         DataRefreshManager.getInstance().addListener(this);
         

@@ -3,8 +3,11 @@ package com.example.app.viewmodel;
 import com.example.app.model.FinancialAdvice;
 import com.example.app.ui.dashboard.OverviewPanel;
 import com.example.app.ui.pages.AI.getRes;
+import com.example.app.user_data.UserBillStorage;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +74,30 @@ public class AIViewModel {
         // Add initial welcome message
         addAIMessage("Hello! I can help analyze your finances and provide personalized advice. Ask me anything about your financial data.");
     }
+    private String buildTransactionContext() {
+    // 1) 读取用户账单
+    UserBillStorage.setUsername(username);          // ← 用你已有的存储类
+    List<Object[]> txs = UserBillStorage.loadTransactions();
 
+    // 2) 拼成可读字符串
+    StringBuilder sb = new StringBuilder();
+    sb.append("\n\n--- ALL TRANSACTIONS ---\n");
+    sb.append("Date | Description | Category | Amount\n");
+
+    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    for (Object[] t : txs) {
+        // 避免 NPE & 兼容 CSV 列顺序
+        LocalDate  date = t[0] != null ? LocalDate.parse(t[0].toString()) : null;
+        String     desc = t.length>1 && t[1]!=null ? t[1].toString() : "";
+        String     cat  = t.length>2 && t[2]!=null ? t[2].toString() : "";
+        String     amt  = t.length>3 && t[3]!=null ? t[3].toString() : "";
+
+        sb.append(String.format("%s | %s | %s | %s\n",
+                date!=null?fmt.format(date):"", desc, cat, amt));
+    }
+    sb.append("--- END OF TRANSACTIONS ---\n");
+    return sb.toString();
+}
     /**
      * Add a listener for AI data changes
      */
@@ -92,28 +118,25 @@ public class AIViewModel {
      * Send a user message to the AI and get a response
      */
     public void sendMessage(String userInput) {
-        if (userInput == null || userInput.trim().isEmpty()) {
-            return;
-        }
-        
-        // Add user message to history
+        if (userInput == null || userInput.trim().isEmpty()) return;
+
+        // ① 先把纯用户文本加入聊天历史
         addUserMessage(userInput);
-        
-        // Create a new thread to avoid blocking the UI
+
+        // ② 后台线程调用 AI
         new Thread(() -> {
             try {
-                // Call the AI service
-                String response = aiService.getResponse(apiKey, userInput);
-                String parsedResponse = aiService.parseAIResponse(response);
-                
-                // Add AI response to history
-                addAIMessage(parsedResponse);
+                /* —— 拼完整 prompt —— */
+                String prompt =  buildTransactionContext() + "You are a financial assistant, and here are some fundamentals that you must know (i.e., transaction history), and after the end of transcation, what the user interacts with you, based on the above knowledge, give appropriate answers in English"+ userInput;   // ← 关键改动
+
+                String resp = aiService.getResponse(apiKey, prompt);
+                addAIMessage(aiService.parseAIResponse(resp));
             } catch (IOException e) {
-                // Notify listeners of error
                 notifyError("Error communicating with AI: " + e.getMessage());
             }
         }).start();
     }
+
 
     /**
      * Regenerate financial advice
