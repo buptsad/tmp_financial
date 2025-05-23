@@ -43,6 +43,11 @@ public class CategoryBreakdownViewModel implements DataRefreshListener {
         return financeData.getCategoryBudgets();
     }
 
+    // Add this missing method
+    public List<FinanceData.Transaction> getTransactions() {
+        return financeData.getTransactions();
+    }
+
     @Override
     public void onDataRefresh(DataRefreshManager.RefreshType type) {
         if (type == DataRefreshManager.RefreshType.TRANSACTIONS ||

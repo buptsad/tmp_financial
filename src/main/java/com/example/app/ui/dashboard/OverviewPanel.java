@@ -58,6 +58,9 @@ public class OverviewPanel extends JPanel implements OverviewChangeListener {
         FinanceData financeData = new FinanceData();
         viewModel = new OverviewViewModel(username, financeData, sharedAdvice);
         viewModel.addChangeListener(this);
+
+        // Explicitly check for warnings after registering as listener
+        viewModel.checkBudgetWarnings();
         
         // Set up panel
         setLayout(new BorderLayout(15, 15));
