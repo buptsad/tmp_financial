@@ -2,6 +2,7 @@ package com.example.app.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,7 +63,7 @@ public class DataRefreshManager {
      * Private constructor to enforce singleton pattern
      */
     private DataRefreshManager() {
-        listeners = new ArrayList<>();
+        listeners = new CopyOnWriteArrayList<>();
     }
     
     /**
@@ -147,5 +148,10 @@ public class DataRefreshManager {
      */
     public void refreshAll() {
         notifyRefresh(RefreshType.ALL);
+    }
+    
+    // Add this method at the end of the class (for test use only)
+    static void _resetForTests() {
+        instance = null;
     }
 }
