@@ -8,21 +8,35 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * A utility class for handling Chinese lunar calendar holiday calculations.
+ * This class provides functionality to convert between Gregorian and Chinese lunar calendar dates,
+ * and to identify traditional Chinese holidays in both calendar systems.
+ */
 public class ChineseHolidayCalendar {
-    // For demo purposes, only Spring Festival is considered a holiday
-    // In lunar calendar, Spring Festival is always on the first day of the first lunar month
+    /** 
+     * For demo purposes, only Spring Festival is considered a holiday.
+     * In lunar calendar, Spring Festival is always on the first day of the first lunar month 
+     */
     private static final int SPRING_FESTIVAL_MONTH = 1;
     private static final int SPRING_FESTIVAL_DAY = 1;
     
-    // Number of official holiday days for Spring Festival
+    /** Number of official holiday days for Spring Festival */
     private static final int SPRING_FESTIVAL_DAYS = 7;
     
+    /**
+     * Constructs a new ChineseHolidayCalendar instance.
+     * No initialization is required for this class.
+     */
     public ChineseHolidayCalendar() {
         // No initialization needed
     }
     
     /**
-     * Get Spring Festival date (first day) for a specific lunar year in Gregorian calendar
+     * Gets the Spring Festival date (first day) for a specific lunar year in the Gregorian calendar.
+     *
+     * @param lunarYear the Chinese lunar year
+     * @return the first day of Spring Festival as a LocalDate in the Gregorian calendar
      */
     public LocalDate getSpringFestivalDate(int lunarYear) {
         // Create lunar date for Spring Festival
@@ -34,7 +48,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Get all Spring Festival holidays for a specific lunar year in Gregorian calendar
+     * Gets all Spring Festival holidays for a specific lunar year in the Gregorian calendar.
+     *
+     * @param lunarYear the Chinese lunar year
+     * @return a list of LocalDates representing all days of the Spring Festival holiday period
      */
     public List<LocalDate> getSpringFestivalHolidays(int lunarYear) {
         List<LocalDate> holidays = new ArrayList<>();
@@ -49,7 +66,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Get all holidays for a given Gregorian calendar year
+     * Gets all holidays for a given Gregorian calendar year.
+     *
+     * @param gregorianYear the Gregorian calendar year
+     * @return a list of LocalDates representing all holiday dates in the specified year
      */
     public List<LocalDate> getHolidaysForYear(int gregorianYear) {
         List<LocalDate> allHolidays = new ArrayList<>();
@@ -84,7 +104,11 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Get all holidays within a date range in Gregorian calendar
+     * Gets all holidays within a date range in the Gregorian calendar.
+     *
+     * @param startDate the start date of the range (inclusive)
+     * @param endDate the end date of the range (inclusive)
+     * @return a list of LocalDates representing all holiday dates within the specified range
      */
     public List<LocalDate> getHolidaysInPeriod(LocalDate startDate, LocalDate endDate) {
         List<LocalDate> holidays = new ArrayList<>();
@@ -106,7 +130,11 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Get all holidays within a date range in Chinese lunar calendar format
+     * Gets all holidays within a date range in Chinese lunar calendar format.
+     *
+     * @param startDate the start date of the range in Gregorian calendar (inclusive)
+     * @param endDate the end date of the range in Gregorian calendar (inclusive)
+     * @return a list of ChineseDate objects representing all holiday dates in lunar calendar format
      */
     public List<ChineseDate> getHolidaysInPeriodLunar(LocalDate startDate, LocalDate endDate) {
         List<LocalDate> gregorianHolidays = getHolidaysInPeriod(startDate, endDate);
@@ -121,7 +149,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Check if a given date is a holiday
+     * Checks if a given date is a holiday.
+     *
+     * @param date the date to check
+     * @return true if the date is a holiday, false otherwise
      */
     public boolean isHoliday(LocalDate date) {
         List<LocalDate> yearHolidays = getHolidaysForYear(date.getYear());
@@ -129,7 +160,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Convert Gregorian date to Chinese lunar date
+     * Converts a Gregorian date to Chinese lunar date.
+     *
+     * @param date the Gregorian date to convert
+     * @return the equivalent date in the Chinese lunar calendar
      */
     public ChineseDate toChineseDate(LocalDate date) {
         Date utilDate = DateUtil.date(date);
@@ -137,7 +171,12 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Convert Chinese lunar date to Gregorian date
+     * Converts a Chinese lunar date to a Gregorian date.
+     *
+     * @param lunarYear the lunar year
+     * @param lunarMonth the lunar month
+     * @param lunarDay the lunar day
+     * @return the equivalent date in the Gregorian calendar
      */
     public LocalDate fromChineseDate(int lunarYear, int lunarMonth, int lunarDay) {
         ChineseDate lunarDate = new ChineseDate(lunarYear, lunarMonth, lunarDay);
@@ -146,7 +185,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Format a date in Chinese lunar calendar representation
+     * Formats a Gregorian date in Chinese lunar calendar representation.
+     *
+     * @param date the Gregorian date to format
+     * @return a string representation of the date in Chinese lunar calendar format
      */
     public String formatChineseDate(LocalDate date) {
         ChineseDate chineseDate = toChineseDate(date);
@@ -154,7 +196,10 @@ public class ChineseHolidayCalendar {
     }
     
     /**
-     * Get the lunar year for a Gregorian date
+     * Gets the lunar year for a Gregorian date.
+     *
+     * @param date the Gregorian date
+     * @return the corresponding Chinese lunar year
      */
     public int getLunarYear(LocalDate date) {
         ChineseDate chineseDate = toChineseDate(date);

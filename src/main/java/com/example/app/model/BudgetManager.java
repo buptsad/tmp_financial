@@ -5,62 +5,62 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * 负责管理预算数据的保存和加载
+ * Class responsible for managing budget data saving and loading operations
  */
 public class BudgetManager {
     
     private static final String BUDGETS_FILE_NAME = "user_budgets.csv";
     
     /**
-     * 保存预算数据到CSV文件
-     * @param categoryBudgets 类别预算映射
-     * @param directory CSV文件所在目录
+     * Saves budget data to a CSV file
+     * @param categoryBudgets Map of category budget allocations
+     * @param directory Directory where the CSV file will be saved
      */
     public static void saveBudgetsToCSV(Map<String, Double> categoryBudgets, String directory) {
         Path filePath = Paths.get(directory, BUDGETS_FILE_NAME);
         
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
-            // 写入CSV头部
+            // Write CSV header
             writer.write("Category,Budget");
             writer.newLine();
             
-            // 写入每个类别和预算
+            // Write each category and budget
             for (Map.Entry<String, Double> entry : categoryBudgets.entrySet()) {
                 writer.write(entry.getKey() + "," + entry.getValue());
                 writer.newLine();
             }
             
-            System.out.println("预算数据已成功保存到: " + filePath);
+            System.out.println("Budget data successfully saved to: " + filePath);
             
         } catch (IOException e) {
-            System.err.println("保存预算数据时出错: " + e.getMessage());
+            System.err.println("Error saving budget data: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
     /**
-     * 从CSV文件加载预算数据
-     * @param directory CSV文件所在目录
-     * @return 类别预算映射
+     * Loads budget data from a CSV file
+     * @param directory Directory where the CSV file is located
+     * @return Map of category budget allocations
      */
     public static Map<String, Double> loadBudgetsFromCSV(String directory) {
         Map<String, Double> categoryBudgets = new LinkedHashMap<>();
         Path filePath = Paths.get(directory, BUDGETS_FILE_NAME);
         
-        // 检查文件是否存在
+        // Check if file exists
         if (!Files.exists(filePath)) {
-            System.out.println("预算文件不存在，将使用默认预算");
-            return categoryBudgets; // 返回空映射，后续会填充默认值
+            System.out.println("Budget file does not exist, using default budgets");
+            return categoryBudgets; // Return empty map, default values will be added later
         }
         
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
-            // 跳过CSV头部
+            // Skip CSV header
             String line = reader.readLine();
             
-            // 读取每行数据
+            // Read each line of data
             while ((line = reader.readLine()) != null) {
                 if (line.trim().isEmpty() || line.startsWith("//")) {
-                    continue; // 跳过空行和注释
+                    continue; // Skip empty lines and comments
                 }
                 
                 String[] parts = line.split(",");
@@ -70,15 +70,15 @@ public class BudgetManager {
                         double budget = Double.parseDouble(parts[1].trim());
                         categoryBudgets.put(category, budget);
                     } catch (NumberFormatException e) {
-                        System.err.println("解析预算值时出错: " + parts[1]);
+                        System.err.println("Error parsing budget value: " + parts[1]);
                     }
                 }
             }
             
-            System.out.println("从 " + filePath + " 成功加载了 " + categoryBudgets.size() + " 个预算类别");
+            System.out.println("Successfully loaded " + categoryBudgets.size() + " budget categories from " + filePath);
             
         } catch (IOException e) {
-            System.err.println("加载预算数据时出错: " + e.getMessage());
+            System.err.println("Error loading budget data: " + e.getMessage());
             e.printStackTrace();
         }
         

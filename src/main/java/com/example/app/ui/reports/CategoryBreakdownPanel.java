@@ -17,11 +17,34 @@ import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.Map;
 
+
+/**
+ * A panel that displays a pie chart breakdown of expenses by category.
+ * This panel listens for currency and data changes and updates the chart accordingly.
+ * <p>
+ * Features:
+ * <ul>
+ *   <li>Pie chart visualization of expenses by category</li>
+ *   <li>Dynamic color assignment for each category</li>
+ *   <li>Currency symbol adapts to user settings</li>
+ *   <li>Supports time range selection for filtering data</li>
+ *   <li>Listens to ViewModel and currency changes</li>
+ * </ul>
+ * </p>
+ */
 public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
+    /** The ViewModel providing category breakdown data */
     private final CategoryBreakdownViewModel viewModel;
+    /** The chart panel displaying the pie chart */
     private ChartPanel chartPanel;
+    /** The current time range for the report */
     private String timeRange = "Last 30 days";
 
+    /**
+     * Constructs a new CategoryBreakdownPanel with the given ViewModel.
+     *
+     * @param viewModel the ViewModel for category breakdown data
+     */
     public CategoryBreakdownPanel(CategoryBreakdownViewModel viewModel) {
         this.viewModel = viewModel;
         this.viewModel.addChangeListener(this);
@@ -37,6 +60,11 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         CurrencyManager.getInstance().addCurrencyChangeListener(this);
     }
 
+    /**
+     * Creates the pie chart for category breakdown.
+     *
+     * @return the JFreeChart instance
+     */
     private JFreeChart createChart() {
         DefaultPieDataset dataset = createDataset();
         String title = "Expense Breakdown by Category (" + timeRange + ")";
@@ -68,6 +96,11 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         return chart;
     }
 
+    /**
+     * Creates the dataset for the pie chart using category expenses.
+     *
+     * @return the DefaultPieDataset for the chart
+     */
     private DefaultPieDataset createDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
         Map<String, Double> categoryExpenses = viewModel.getCategoryExpenses();
@@ -77,6 +110,12 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         return dataset;
     }
 
+    /**
+     * Returns a color for the given index, cycling through a predefined palette.
+     *
+     * @param index the index of the category
+     * @return the Color to use for the chart section
+     */
     private Color getColorForIndex(int index) {
         Color[] colors = {
             new Color(65, 105, 225),  // Royal Blue
@@ -90,26 +129,49 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         return colors[index % colors.length];
     }
 
+    /**
+     * Sets the time range for the report and updates the chart.
+     *
+     * @param timeRange the time range to display
+     */
     public void setTimeRange(String timeRange) {
         this.timeRange = timeRange;
     }
 
+    /**
+     * Refreshes the chart with the latest data and settings.
+     */
     public void refreshChart() {
         JFreeChart chart = createChart();
         chartPanel.setChart(chart);
         chartPanel.repaint();
     }
 
+    /**
+     * Called when the application currency changes.
+     * Refreshes the chart to update currency symbols.
+     *
+     * @param currencyCode the new currency code
+     * @param currencySymbol the new currency symbol
+     */
     @Override
     public void onCurrencyChanged(String currencyCode, String currencySymbol) {
         refreshChart();
     }
 
+    /**
+     * Called when the chart data changes in the ViewModel.
+     * Refreshes the chart.
+     */
     @Override
     public void onChartDataChanged() {
         SwingUtilities.invokeLater(this::refreshChart);
     }
 
+    /**
+     * Called when this panel is removed from its container.
+     * Cleans up listeners and resources.
+     */
     @Override
     public void removeNotify() {
         super.removeNotify();
