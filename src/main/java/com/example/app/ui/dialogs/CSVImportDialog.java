@@ -3,6 +3,7 @@ package com.example.app.ui.dialogs;
 import com.example.app.ui.pages.TransactionsPanel;
 import com.example.app.user_data.UserBillStorage;
 import com.example.app.model.FinanceData; // 添加导入
+import com.example.app.ui.pages.AI.classification;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -303,12 +304,119 @@ public class CSVImportDialog extends JDialog {
         JScrollPane scrollPane = new JScrollPane(previewTable);
         panel.add(scrollPane, BorderLayout.CENTER);
         
+        // Add a panel for buttons and record count at the bottom
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        
+        // Add AI categorization button
+        JButton categorizeButton = new JButton("AI Categorize");
+        categorizeButton.setToolTipText("Use AI to automatically categorize transactions");
+        categorizeButton.addActionListener(e -> aiCategorizeTransactions());
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.add(categorizeButton);
+        bottomPanel.add(buttonPanel, BorderLayout.WEST);
+        
         // Add a label indicating the number of records
         recordCountLabel = new JLabel("0 records found");
         recordCountLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        panel.add(recordCountLabel, BorderLayout.SOUTH);
+        bottomPanel.add(recordCountLabel, BorderLayout.EAST);
+        
+        panel.add(bottomPanel, BorderLayout.SOUTH);
         
         return panel;
+    }
+
+    /**
+     * Uses AI to categorize transactions based on their descriptions
+     * Now with batch processing (20 transactions at a time) to avoid API errors
+     */
+    private void aiCategorizeTransactions() {
+        if (csvData.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "No transactions to categorize. Please import data first.",
+                "No Data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Find the index of the category column in csvHeaders
+        int catColIdx = getSelectedIndex(categoryColumnCombo);
+        if (catColIdx < 0) {
+            JOptionPane.showMessageDialog(this,
+                "Please select a Category column for AI to fill.",
+                "No Category Column", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        new SwingWorker<List<String>, Integer>() {
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                List<String> allCategories = new ArrayList<>();
+                classification aiService = new classification();
+                String API_KEY = "sk-fdf26a37926f46ab8d4884c2cd533db8";
+                final int BATCH_SIZE = 20;
+                int totalRows = csvData.size();
+
+                for (int batchStart = 0; batchStart < totalRows; batchStart += BATCH_SIZE) {
+                    int batchEnd = Math.min(batchStart + BATCH_SIZE, totalRows);
+                    StringBuilder transactionsForAI = new StringBuilder();
+                    for (int i = batchStart; i < batchEnd; i++) {
+                        List<String> row = csvData.get(i);
+                        // Delete the last column (delete) from the row
+                        row.remove(row.size() - 1);
+                        // Join all column values with commas
+                        transactionsForAI.append(String.join(",", row)).append("\n");
+                    }
+                    String response = aiService.getResponse(API_KEY, transactionsForAI.toString());
+                    String parsedResponse = aiService.parseAIResponse(response);
+                    String[] batchCategories = parsedResponse.split(",");
+                    for (String category : batchCategories) {
+                        allCategories.add(category.trim());
+                    }
+                    publish(batchEnd);
+                    Thread.sleep(100);
+                }
+                return allCategories;
+            }
+
+            @Override
+            protected void process(List<Integer> chunks) {
+                int processed = chunks.get(chunks.size() - 1);
+                recordCountLabel.setText(processed + "/" + csvData.size() + " categorized");
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                try {
+                    List<String> categories = get();
+                    int rowCount = Math.min(categories.size(), csvData.size());
+                    // Update the category column in csvData
+                    for (int i = 0; i < rowCount; i++) {
+                        csvData.get(i).set(catColIdx, categories.get(i));
+                    }
+                    // Refresh preview table to show new categories
+                    updatePreview();
+
+                    JOptionPane.showMessageDialog(
+                        CSVImportDialog.this,
+                        rowCount + " transactions were categorized by AI.",
+                        "AI Categorization Complete",
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                    recordCountLabel.setText(csvData.size() + " records found, showing " +
+                            Math.min(csvData.size(), 10));
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(
+                        CSVImportDialog.this,
+                        "AI categorization failed: " + e.getMessage(),
+                        "AI Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        }.execute();
     }
     
     private JPanel createButtonPanel() {
