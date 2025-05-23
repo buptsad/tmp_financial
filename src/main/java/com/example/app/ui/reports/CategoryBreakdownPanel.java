@@ -4,6 +4,7 @@ import com.example.app.viewmodel.reports.CategoryBreakdownViewModel;
 import com.example.app.viewmodel.reports.CategoryBreakdownViewModel.ChartDataChangeListener;
 import com.example.app.ui.CurrencyManager;
 import com.example.app.ui.CurrencyManager.CurrencyChangeListener;
+import com.example.app.model.FinanceData;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,6 +16,8 @@ import org.jfree.data.general.DefaultPieDataset;
 import javax.swing.*;
 import java.awt.*;
 import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
@@ -38,12 +41,12 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
     }
 
     private JFreeChart createChart() {
-        DefaultPieDataset dataset = createDataset();
+        DefaultPieDataset<String> dataset = createDataset();
         String title = "Expense Breakdown by Category (" + timeRange + ")";
         JFreeChart chart = ChartFactory.createPieChart(
                 title, dataset, true, true, false
         );
-        PiePlot plot = (PiePlot) chart.getPlot();
+        PiePlot<String> plot = (PiePlot<String>) chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
         plot.setOutlineVisible(false);
         plot.setShadowPaint(null);
@@ -68,13 +71,51 @@ public class CategoryBreakdownPanel extends JPanel implements CurrencyChangeList
         return chart;
     }
 
-    private DefaultPieDataset createDataset() {
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        Map<String, Double> categoryExpenses = viewModel.getCategoryExpenses();
-        for (Map.Entry<String, Double> entry : categoryExpenses.entrySet()) {
+    private DefaultPieDataset<String> createDataset() {
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
+        
+        // Get the full category expenses map
+        Map<String, Double> allCategoryExpenses = viewModel.getCategoryExpenses();
+        
+        // Get time-filtered transactions and recalculate category totals
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = getStartDateFromRange(timeRange);
+        
+        // Create filtered dataset based on the time range
+        Map<String, Double> filteredExpenses = new HashMap<>();
+        
+        // Get all transactions from the ViewModel and filter by date
+        for (FinanceData.Transaction transaction : viewModel.getTransactions()) {
+            LocalDate date = transaction.getDate();
+            if (date.isAfter(startDate.minusDays(1)) && date.isBefore(endDate.plusDays(1))) {
+                if (transaction.isExpense()) {
+                    String category = transaction.getCategory();
+                    double amount = Math.abs(transaction.getAmount());
+                    filteredExpenses.put(category, 
+                        filteredExpenses.getOrDefault(category, 0.0) + amount);
+                }
+            }
+        }
+        
+        // Add filtered data to the dataset
+        for (Map.Entry<String, Double> entry : filteredExpenses.entrySet()) {
             dataset.setValue(entry.getKey(), entry.getValue());
         }
+        
         return dataset;
+    }
+
+    private LocalDate getStartDateFromRange(String range) {
+        LocalDate today = LocalDate.now();
+        switch (range) {
+            case "Last 7 days": return today.minusDays(7);
+            case "Last 30 days": return today.minusDays(30);
+            case "Last 90 days": return today.minusDays(90);
+            case "This month": return today.withDayOfMonth(1);
+            case "Last month": return today.minusMonths(1).withDayOfMonth(1);
+            case "This year": return today.withDayOfYear(1);
+            default: return today.minusDays(30);
+        }
     }
 
     private Color getColorForIndex(int index) {

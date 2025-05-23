@@ -96,17 +96,14 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener, 
     }
     
     private XYDataset createDataset() {
-        // Create time series for income, expenses, and budget
         TimeSeries incomeSeries = new TimeSeries("Income");
         TimeSeries expensesSeries = new TimeSeries("Expenses");
         TimeSeries budgetSeries = new TimeSeries("Budget");
         
-        // Get data from the ViewModel
         List<LocalDate> dates = viewModel.getDates();
         Map<LocalDate, Double> incomes = viewModel.getDailyIncomes();
         Map<LocalDate, Double> expenses = viewModel.getDailyExpenses();
         
-        // Filter dates based on time range
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = getStartDateFromRange(timeRange);
         
@@ -114,34 +111,41 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener, 
         Map<RegularTimePeriod, Double> groupedIncomes = new HashMap<>();
         Map<RegularTimePeriod, Double> groupedExpenses = new HashMap<>();
         
-        for (LocalDate date : dates) {
-            if (date.isAfter(startDate.minusDays(1)) && date.isBefore(endDate.plusDays(1))) {
-                Date utilDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                RegularTimePeriod period = getTimePeriod(utilDate);
-                
-                Double income = incomes.get(date);
-                Double expense = expenses.get(date);
-                
-                if (income != null) {
-                    groupedIncomes.put(period, groupedIncomes.getOrDefault(period, 0.0) + income);
-                }
-                
-                if (expense != null) {
-                    groupedExpenses.put(period, groupedExpenses.getOrDefault(period, 0.0) + expense);
-                }
+        // Process all dates in the range, not just those with existing data
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            Date utilDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            RegularTimePeriod period = getTimePeriod(utilDate);
+            
+            // Initialize period if not exists
+            groupedIncomes.putIfAbsent(period, 0.0);
+            groupedExpenses.putIfAbsent(period, 0.0);
+            
+            // Add actual data if available
+            Double income = incomes.get(currentDate);
+            Double expense = expenses.get(currentDate);
+            
+            if (income != null) {
+                groupedIncomes.put(period, groupedIncomes.get(period) + income);
             }
+            
+            if (expense != null) {
+                groupedExpenses.put(period, groupedExpenses.get(period) + expense);
+            }
+            
+            currentDate = currentDate.plusDays(1);
         }
         
         // Add data to series
         for (RegularTimePeriod period : getSortedPeriods(groupedIncomes.keySet())) {
-            if (groupedIncomes.containsKey(period)) {
-                incomeSeries.add(period, groupedIncomes.get(period));
+            Double income = groupedIncomes.get(period);
+            Double expense = groupedExpenses.get(period);
+            
+            if (income != null) {
+                incomeSeries.add(period, income);
             }
-        }
-        
-        for (RegularTimePeriod period : getSortedPeriods(groupedExpenses.keySet())) {
-            if (groupedExpenses.containsKey(period)) {
-                expensesSeries.add(period, groupedExpenses.get(period));
+            if (expense != null) {
+                expensesSeries.add(period, expense);
             }
             
             // Add budget line based on interval
@@ -170,9 +174,10 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener, 
             case "Weekly":
                 return new Week(date);
             case "Fortnightly":
-                // JFreeChart doesn't have a built-in fortnight period
                 Week week = new Week(date);
-                return new Week((week.getWeek() + 1) / 2, week.getYear());
+                // Group weeks into pairs - create a consistent fortnight grouping
+                int fortnightNumber = (week.getWeek() - 1) / 2;
+                return new Week(fortnightNumber * 2 + 1, week.getYear());
             case "Monthly":
                 return new Month(date);
             case "Quarterly":
@@ -198,8 +203,8 @@ public class TrendReportPanel extends JPanel implements CurrencyChangeListener, 
         } else if (period instanceof Year) {
             return monthlyBudget * 12;
         } else {
-            // Handle fortnightly (2 weeks) as special case
-            return monthlyBudget / 2.165;  // Half of monthly
+            // Default for any other period type
+            return monthlyBudget / 2.165;  // Fortnightly approximation
         }
     }
     

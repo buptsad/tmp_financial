@@ -18,14 +18,14 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.List; // Add this import to resolve ambiguity
 
 public class IncomeExpensesReportPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
     private final IncomeExpensesReportViewModel viewModel;
     private ChartPanel chartPanel;
     private String timeRange = "Last 30 days";
+    private String interval = "Daily"; // Add interval support
 
     public IncomeExpensesReportPanel(IncomeExpensesReportViewModel viewModel) {
         this.viewModel = viewModel;
@@ -79,17 +79,48 @@ public class IncomeExpensesReportPanel extends JPanel implements CurrencyChangeL
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = getStartDateFromRange(timeRange);
 
-        for (LocalDate date : dates) {
-            if (date.isAfter(startDate.minusDays(1)) && date.isBefore(endDate.plusDays(1))) {
-                Date utilDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                Day day = new Day(utilDate);
+        // Group data based on the selected interval
+        Map<RegularTimePeriod, Double> groupedIncomes = new HashMap<>();
+        Map<RegularTimePeriod, Double> groupedExpenses = new HashMap<>();
 
-                Double income = incomes.get(date);
-                Double expense = expenses.get(date);
+        // Process all dates in the range
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            Date utilDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            RegularTimePeriod period = getTimePeriod(utilDate);
+            
+            // Initialize period if not exists
+            groupedIncomes.putIfAbsent(period, 0.0);
+            groupedExpenses.putIfAbsent(period, 0.0);
+            
+            // Add actual data if available
+            Double income = incomes.get(currentDate);
+            Double expense = expenses.get(currentDate);
+            
+            if (income != null) {
+                groupedIncomes.put(period, groupedIncomes.get(period) + income);
+            }
+            
+            if (expense != null) {
+                groupedExpenses.put(period, groupedExpenses.get(period) + expense);
+            }
+            
+            currentDate = currentDate.plusDays(1);
+        }
 
-                if (income != null) incomeSeries.add(day, income);
-                if (expense != null) expensesSeries.add(day, expense);
-                if (income != null && expense != null) netSeries.add(day, income - expense);
+        // Add grouped data to series
+        for (RegularTimePeriod period : getSortedPeriods(groupedIncomes.keySet())) {
+            Double income = groupedIncomes.get(period);
+            Double expense = groupedExpenses.get(period);
+            
+            if (income != null && income > 0) {
+                incomeSeries.add(period, income);
+            }
+            if (expense != null && expense > 0) {
+                expensesSeries.add(period, expense);
+            }
+            if (income != null && expense != null) {
+                netSeries.add(period, income - expense);
             }
         }
 
@@ -101,8 +132,41 @@ public class IncomeExpensesReportPanel extends JPanel implements CurrencyChangeL
         return dataset;
     }
 
+    private List<RegularTimePeriod> getSortedPeriods(Set<RegularTimePeriod> periods) {
+        List<RegularTimePeriod> sortedPeriods = new ArrayList<>(periods);
+        Collections.sort(sortedPeriods);
+        return sortedPeriods;
+    }
+
+    private RegularTimePeriod getTimePeriod(Date date) {
+        switch (interval) {
+            case "Daily":
+                return new Day(date);
+            case "Weekly":
+                return new Week(date);
+            case "Fortnightly":
+                Week week = new Week(date);
+                // Group weeks into pairs (every 2 weeks)
+                int fortnightNumber = (week.getWeek() - 1) / 2;
+                return new Week(fortnightNumber * 2 + 1, week.getYear());
+            case "Monthly":
+                return new Month(date);
+            case "Quarterly":
+                return new Quarter(date);
+            case "Yearly":
+                return new Year(date);
+            default:
+                return new Day(date);
+        }
+    }
+
     public void setTimeRange(String timeRange) {
         this.timeRange = timeRange;
+    }
+
+    // Add interval setter
+    public void setInterval(String interval) {
+        this.interval = interval;
     }
 
     public void refreshChart() {

@@ -109,68 +109,62 @@ public class ReportsPanel extends JPanel implements ReportsChangeListener {
         
         panel.add(Box.createVerticalStrut(20));
         
-        // Interval Section (for trend reports)
-        panel.add(createSectionLabel("Data Interval"));
+        // Interval Section
+        JLabel intervalLabel = createSectionLabel("Data Interval");
         String[] intervals = {"Daily", "Weekly", "Fortnightly", "Monthly", "Quarterly", "Yearly"};
         JComboBox<String> intervalsCombo = new JComboBox<>(intervals);
         intervalsCombo.setMaximumSize(new Dimension(220, 30));
         intervalsCombo.setAlignmentX(LEFT_ALIGNMENT);
+        
+        panel.add(intervalLabel);
         panel.add(intervalsCombo);
         
         panel.add(Box.createVerticalStrut(20));
         
-        // Apply button
-        JButton applyButton = new JButton("Apply Filters");
-        applyButton.setAlignmentX(LEFT_ALIGNMENT);
-        applyButton.setMaximumSize(new Dimension(220, 35));
-        panel.add(applyButton);
-        
-        // 添加加载数据按钮
+        // Load data button (keep this one as it serves a different purpose)
         JButton loadDataButton = new JButton("Load Data");
         loadDataButton.setAlignmentX(LEFT_ALIGNMENT);
         loadDataButton.setMaximumSize(new Dimension(220, 35));
         panel.add(loadDataButton);
         
-        // Add action listeners
+        // Add action listeners for immediate filter application
         timePeriodsCombo.addActionListener(e -> {
             updateReportTimeRange(timePeriodsCombo.getSelectedItem().toString());
+            refreshActiveChart();
         });
         
         intervalsCombo.addActionListener(e -> {
             updateReportInterval(intervalsCombo.getSelectedItem().toString());
+            refreshActiveChart();
         });
         
         incomeExpenseBtn.addActionListener(e -> {
             if (incomeExpenseBtn.isSelected()) {
                 cardLayout.show(chartContainer, INCOME_EXPENSE_PANEL);
+                intervalLabel.setEnabled(true);
+                intervalsCombo.setEnabled(true);
             }
         });
         
         categoryBreakdownBtn.addActionListener(e -> {
             if (categoryBreakdownBtn.isSelected()) {
                 cardLayout.show(chartContainer, CATEGORY_BREAKDOWN_PANEL);
+                intervalLabel.setEnabled(false);
+                intervalsCombo.setEnabled(false);
             }
         });
         
         trendsBtn.addActionListener(e -> {
             if (trendsBtn.isSelected()) {
                 cardLayout.show(chartContainer, TREND_PANEL);
+                intervalLabel.setEnabled(true);
+                intervalsCombo.setEnabled(true);
             }
-        });
-        
-        applyButton.addActionListener(e -> {
-            applyFilters(
-                timePeriodsCombo.getSelectedItem().toString(),
-                intervalsCombo.getSelectedItem().toString()
-            );
         });
         
         loadDataButton.addActionListener(e -> {
             viewModel.loadTransactionData();
-            // 刷新所有图表
-            incomeExpensesPanel.refreshChart();
-            categoryBreakdownPanel.refreshChart();
-            trendReportPanel.refreshChart();
+            refreshAllCharts();
             JOptionPane.showMessageDialog(this, "交易数据已成功加载", "加载成功", JOptionPane.INFORMATION_MESSAGE);
         });
         
@@ -198,18 +192,38 @@ public class ReportsPanel extends JPanel implements ReportsChangeListener {
         trendReportPanel.setTimeRange(timeRange);
     }
     
+    // Update the updateReportInterval method
     private void updateReportInterval(String interval) {
+        // Only update panels that support intervals
+        incomeExpensesPanel.setInterval(interval);
         trendReportPanel.setInterval(interval);
+        // CategoryBreakdownPanel doesn't use intervals
     }
-    
-    private void applyFilters(String timeRange, String interval) {
-        updateReportTimeRange(timeRange);
-        updateReportInterval(interval);
-        
-        // Refresh all panels
+
+    // Add this new method to refresh all charts at once
+    private void refreshAllCharts() {
         incomeExpensesPanel.refreshChart();
         categoryBreakdownPanel.refreshChart();
         trendReportPanel.refreshChart();
+    }
+
+    // Add this method to refresh only the currently visible chart
+    private void refreshActiveChart() {
+        Component visibleComponent = null;
+        for (Component comp : chartContainer.getComponents()) {
+            if (comp.isVisible()) {
+                visibleComponent = comp;
+                break;
+            }
+        }
+        
+        if (visibleComponent == incomeExpensesPanel) {
+            incomeExpensesPanel.refreshChart();
+        } else if (visibleComponent == categoryBreakdownPanel) {
+            categoryBreakdownPanel.refreshChart();
+        } else if (visibleComponent == trendReportPanel) {
+            trendReportPanel.refreshChart();
+        }
     }
 
     @Override
