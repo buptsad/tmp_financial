@@ -250,6 +250,10 @@ public class TransactionsPanel extends JPanel implements TransactionChangeListen
             return;
         }
         
+        // Use the ViewModel to add transactions
+        // This allows the ViewModel to handle any necessary processing
+        viewModel.addTransactions(importedTransactions);
+        
         // Add to UI table
         for (Object[] transaction : importedTransactions) {
             tableModel.addRow(transaction);

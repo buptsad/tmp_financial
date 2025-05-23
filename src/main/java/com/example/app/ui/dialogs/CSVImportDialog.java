@@ -717,7 +717,7 @@ public class CSVImportDialog extends JDialog {
         }
         
         // 将导入的交易数据添加到FinanceData中
-        financeData.importTransactions(transactions);
+        // financeData.importTransactions(transactions);
         
         // Import the transactions into the main panel
         parentPanel.addTransactionsFromCSV(transactions);
@@ -753,8 +753,8 @@ public class CSVImportDialog extends JDialog {
                     typeColumnCombo.setEnabled(true);
                     
                     // Set identifiers
-                    incomeIdentifierField.setText("Income");
-                    expenseIdentifierField.setText("Expense");
+                    incomeIdentifierField.setText("收入");
+                    expenseIdentifierField.setText("支出");
                     incomeIdentifierField.setEnabled(true);
                     expenseIdentifierField.setEnabled(true);
                     break;
