@@ -45,24 +45,6 @@ application {
 
 test {
     useJUnitPlatform()
-    
-    // 增加JVM内存配置
-    jvmArgs '-Xmx1024m', '-Xms512m'
-    
-    // 设置测试超时
-    timeout = Duration.ofMinutes(10)
-    
-    // 禁用并行测试执行
-    maxParallelForks = 1
-    
-    // 设置测试日志
-    testLogging {
-        events "passed", "skipped", "failed", "standard_error"
-        exceptionFormat "full"
-    }
-    
-    // 在测试失败时继续执行
-    ignoreFailures = false
 }
 
 tasks.named('jar') {
