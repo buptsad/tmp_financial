@@ -24,10 +24,10 @@ public class classification {
      * private constructor to prevent instantiation of this utility class.
      * This class only contains static methods and should not be instantiated.
      */
-    private classification() {
+    public classification() {
         // Prevent instantiation
     }
-    
+
     /**
      * DeepSeek API endpoint URL
      */

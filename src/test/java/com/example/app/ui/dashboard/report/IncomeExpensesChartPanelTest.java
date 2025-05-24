@@ -22,7 +22,7 @@ class IncomeExpensesChartPanelTest {
         
         static class TestFinanceData extends com.example.app.model.FinanceData {
             @Override
-            public List<LocalDate> getDates() {
+            public java.util.List<LocalDate> getDates() {
                 return Arrays.asList(
                     LocalDate.now().minusDays(2),
                     LocalDate.now().minusDays(1),
