@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  *   <li>Supports registration and removal of report data change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class ReportsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(ReportsViewModel.class.getName());

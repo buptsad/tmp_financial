@@ -20,7 +20,7 @@ import java.awt.event.ActionListener;
  *   <li>Provides a button to regenerate financial advice</li>
  *   <li>Updates UI in response to ViewModel events</li>
  * </ul>
- * </p>
+ 
  */
 public class AIPanel extends JPanel implements AIViewModel.AIDataChangeListener {
     /** Reference to the ViewModel */

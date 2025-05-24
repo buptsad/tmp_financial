@@ -20,7 +20,7 @@ import java.util.Map;
  *   <li>Provides access to the list of transactions</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class CategoryBreakdownViewModel implements DataRefreshListener {
     private final FinanceData financeData;

@@ -27,7 +27,7 @@ import java.util.Enumeration;
  *   <li>Card layout for switching between sub-panels</li>
  *   <li>Responsive to currency and data changes</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardPanel extends JPanel implements CurrencyChangeListener, DashboardChangeListener {
     /** ViewModel reference */
@@ -43,8 +43,11 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener, Da
     private CardLayout cardLayout;
     /** Navigation buttons */
     private JButton overviewButton;
+    /** Navigation buttons */
     private JButton transactionsButton;
+    /** Navigation buttons */
     private JButton budgetsButton;
+    /** Navigation buttons */
     private JButton reportsButton;
 
     /** Color for selected navigation button */

@@ -23,7 +23,7 @@ import java.util.*;
  *   <li>Shows AI-generated budget suggestions and allows applying them</li>
  *   <li>Visualizes budget usage with progress bars and difference indicators</li>
  * </ul>
- * </p>
+ 
  */
 public class BudgetsPanel extends JPanel implements CurrencyChangeListener, BudgetViewModel.BudgetChangeListener {
     /** The ViewModel providing budget data and business logic */

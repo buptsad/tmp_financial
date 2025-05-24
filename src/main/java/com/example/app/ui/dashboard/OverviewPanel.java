@@ -22,11 +22,11 @@ import java.util.logging.Logger;
  *   <li>Left side: Financial chart showing income, expenses, and budget trends</li>
  *   <li>Right side: Detailed financial information and personalized advice</li>
  * </ul>
- * </p>
+ 
  * <p>
  * This panel implements the OverviewChangeListener interface to respond to changes
  * in the underlying financial data and update the UI accordingly.
- * </p>
+ 
  */
 public class OverviewPanel extends JPanel implements OverviewChangeListener {
     /** Logger for this class */

@@ -34,11 +34,11 @@ import java.util.Map;
  *   <li>Income - Daily income values plotted with a green line</li>
  *   <li>Expenses - Daily expense values plotted with a red line</li>
  * </ul>
- * </p>
+ 
  * <p>
  * This panel implements both currency change and chart data change listeners
  * to ensure that the chart display is always current and accurate.
- * </p>
+ 
  */
 public class IncomeExpensesChartPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
     

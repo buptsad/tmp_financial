@@ -62,3 +62,11 @@ tasks.named('jar') {
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+
+// ...existing code...
+
+/* javadoc {
+    source = files('src/main/java/com/example/app/model/DataRefreshListener.java')
+    include 'com/example/app/model/DataRefreshListener.java'
+}   */

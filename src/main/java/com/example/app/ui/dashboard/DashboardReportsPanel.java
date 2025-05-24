@@ -23,7 +23,7 @@ import java.awt.*;
  *   <li>Income vs. Expenses chart showing time series data</li>
  *   <li>Category Spending chart comparing budget vs. actual spending by category</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardReportsPanel extends JPanel implements CurrencyChangeListener, ReportDataChangeListener {
     

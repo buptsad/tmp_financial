@@ -9,9 +9,18 @@ import javax.swing.*;
  * Main entry point for the financial application.
  * <p>
  * Initializes the look and feel, currency manager, and launches the login page.
- * </p>
+ 
  */
 public class Main {
+
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    private Main() {
+        // Prevent instantiation
+    }
+
     /**
      * Application entry point.
      * Sets up the look and feel, initializes managers, and starts the login UI.

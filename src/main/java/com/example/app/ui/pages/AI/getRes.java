@@ -20,6 +20,14 @@ import java.util.Map;
  */
 public class getRes {
     /**
+     * Private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    public getRes() {
+        // Prevent instantiation
+    }
+
+    /**
      * DeepSeek API endpoint URL
      */
     private static final String API_URL = "https://api.deepseek.com/v1/chat/completions";

@@ -14,6 +14,13 @@ import java.util.Set;
  * Provides functionality to read, validate, and deduplicate transaction records.
  */
 public class CSVDataImporter {
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    private CSVDataImporter() {
+
+    }
     
     /**
      * Imports financial transactions from a CSV file.

@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <p>
  * This class is implemented as a singleton and provides methods to get/set the current currency,
  * register/unregister listeners, and format currency amounts.
- * </p>
+ 
  */
 public class CurrencyManager {
     /** Singleton instance */

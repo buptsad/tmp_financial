@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * <p>
  * This class handles loading, saving, and accessing all user preferences including
  * profile information, UI preferences, notification settings, and security settings.
- * </p>
+ 
  */
 public class UserSettings {
     private static final Logger LOGGER = Logger.getLogger(UserSettings.class.getName());

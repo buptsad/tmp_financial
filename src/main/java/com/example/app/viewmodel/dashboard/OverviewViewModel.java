@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  *   <li>Detects and notifies about budget warnings</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class OverviewViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(OverviewViewModel.class.getName());

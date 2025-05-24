@@ -14,7 +14,7 @@ import java.awt.event.ActionListener;
  * <p>
  * This component implements CurrencyChangeListener to update displayed values
  * when the application's currency settings change.
- * </p>
+ 
  */
 public class BudgetCategoryPanel extends JPanel implements CurrencyChangeListener {
     /** The budget category name */

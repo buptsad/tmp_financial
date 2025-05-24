@@ -5,16 +5,30 @@ import java.nio.file.*;
 import java.util.*;
 
 /**
- * Class responsible for managing budget data saving and loading operations
+ * Manages the persistence of budget data through file operations.
+ * This class provides functionality to save budget allocations to CSV files
+ * and load them back into the application. It uses a standardized file format
+ * with "user_budgets.csv" as the default filename.
  */
 public class BudgetManager {
     
+    /** Default filename used for storing budget data */
     private static final String BUDGETS_FILE_NAME = "user_budgets.csv";
     
     /**
-     * Saves budget data to a CSV file
-     * @param categoryBudgets Map of category budget allocations
-     * @param directory Directory where the CSV file will be saved
+     * Private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    private BudgetManager() {
+
+    }
+    
+    /**
+     * Saves budget data to a CSV file with the standard format.
+     * The file will contain a header row followed by category,budget pairs.
+     * 
+     * @param categoryBudgets Map containing category names as keys and budget amounts as values
+     * @param directory Directory path where the CSV file will be saved
      */
     public static void saveBudgetsToCSV(Map<String, Double> categoryBudgets, String directory) {
         Path filePath = Paths.get(directory, BUDGETS_FILE_NAME);
@@ -39,9 +53,13 @@ public class BudgetManager {
     }
     
     /**
-     * Loads budget data from a CSV file
-     * @param directory Directory where the CSV file is located
-     * @return Map of category budget allocations
+     * Loads budget data from a CSV file into a map.
+     * The method expects a file with header row and category,budget pairs.
+     * Empty lines and lines starting with "//" will be skipped.
+     * 
+     * @param directory Directory path where the CSV file is located
+     * @return A map with category names as keys and budget amounts as values.
+     *         Returns an empty map if the file doesn't exist or cannot be read properly.
      */
     public static Map<String, Double> loadBudgetsFromCSV(String directory) {
         Map<String, Double> categoryBudgets = new LinkedHashMap<>();
@@ -84,4 +102,5 @@ public class BudgetManager {
         
         return categoryBudgets;
     }
+
 }

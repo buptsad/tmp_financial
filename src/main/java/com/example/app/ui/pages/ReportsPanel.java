@@ -22,7 +22,7 @@ import java.awt.*;
  *   <li>Apply filters and reload transaction data</li>
  *   <li>Responsive to ViewModel data changes</li>
  * </ul>
- * </p>
+ 
  */
 public class ReportsPanel extends JPanel implements ReportsChangeListener {
     /** The ViewModel providing report data and logic */
@@ -33,8 +33,11 @@ public class ReportsPanel extends JPanel implements ReportsChangeListener {
     private CardLayout cardLayout;
 
     // Chart panels
+    /** Panel for displaying income vs expenses reports */
     private IncomeExpensesReportPanel incomeExpensesPanel;
+    /** Panel for displaying category breakdown reports */
     private CategoryBreakdownPanel categoryBreakdownPanel;
+    /** Panel for displaying trend analysis reports */
     private TrendReportPanel trendReportPanel;
 
     // Constants for card layout

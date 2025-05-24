@@ -30,17 +30,24 @@ import java.util.logging.Logger;
  *   <li>Initializes user storage services on successful login</li>
  *   <li>Styled navigation and error handling</li>
  * </ul>
- * </p>
  */
 public class LoginFrame extends JFrame {
     private static final Logger LOGGER = Logger.getLogger(LoginFrame.class.getName());
+    /** JTextField for username input */
     private JTextField usernameField;
+    /** JPasswordField for password input */
     private JPasswordField passwordField;
+    /** JPanel for card layout */
     private JPanel cardPanel;
+    /** CardLayout for switching between login and register panels */
     private CardLayout cardLayout;
+    /** JPanel for login and register forms */
     private JPanel loginPanel;
+    /** JPanel for register form */
     private JPanel registerPanel;
+    /** Toggle buttons for login and register */
     private JButton loginToggle;
+    /** Toggle button for register */
     private JButton registerToggle;
 
     // Colors and borders for navigation highlighting (matched from MainFrame)

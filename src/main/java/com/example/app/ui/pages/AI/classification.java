@@ -19,6 +19,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Categorizes transactions into predefined categories: Gift, Entertainment, Service, Shopping, Other, and Food.
  */
 public class classification {
+
+    /**
+     * private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    private classification() {
+        // Prevent instantiation
+    }
+    
     /**
      * DeepSeek API endpoint URL
      */

@@ -24,7 +24,7 @@ import java.util.Map;
  *   <li>Passes the current username to all sub-pages</li>
  *   <li>Responsive UI with consistent styling</li>
  * </ul>
- * </p>
+ 
  */
 public class MainFrame extends JFrame {
     /** The main content panel using CardLayout */

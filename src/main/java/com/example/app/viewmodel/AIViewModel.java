@@ -19,7 +19,7 @@ import java.util.List;
  *   <li>Notifies listeners about chat and advice updates</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class AIViewModel {
     // Model references
@@ -50,10 +50,18 @@ public class AIViewModel {
             this.isFromUser = isFromUser;
         }
 
+        /**
+         * Gets the message content.
+         * @return message content
+         */
         public String getContent() {
             return content;
         }
 
+        /**
+         * Checks if the message is from the user.
+         * @return true if from user, false otherwise
+         */
         public boolean isFromUser() {
             return isFromUser;
         }

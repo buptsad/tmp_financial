@@ -21,7 +21,7 @@ import java.util.Map;
  *   <li>Supports registration and removal of chart data change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class TrendReportViewModel implements DataRefreshListener {
     private final FinanceData financeData;

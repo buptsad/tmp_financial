@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  *   <li>Supports registration and removal of settings change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class SettingsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(SettingsViewModel.class.getName());
@@ -48,7 +48,18 @@ public class SettingsViewModel implements DataRefreshListener {
      * Types of settings changes.
      */
     public enum SettingsChangeType {
-        PROFILE, CURRENCY, THEME, NOTIFICATIONS, SECURITY, ALL
+        /** Profile settings changed */
+        PROFILE,
+        /** Currency settings changed */
+        CURRENCY,
+        /** Theme settings changed */
+        THEME,
+        /** Notification settings changed */
+        NOTIFICATIONS,
+        /** Security settings changed */
+        SECURITY,
+        /** All settings changed */
+        ALL
     }
 
     /**

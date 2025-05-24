@@ -8,7 +8,7 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
+             /**
  * Unit tests for the UserSettingsStorage class.
  * Tests the functionality for reading and writing user settings to storage,
  * including file and directory creation, settings persistence, and default value handling.
@@ -59,15 +59,23 @@ class UserSettingsStorageTest {
      */
     @AfterAll
     static void cleanUp() {
-        // Clean up only the test user's directory and files
+        // Clean up settings file and parent directory after all tests
+        if (SETTINGS_FILE.exists()) {
+            SETTINGS_FILE.delete();
+        }
         File dir = SETTINGS_FILE.getParentFile();
         if (dir.exists() && dir.isDirectory()) {
+            // Delete all files in the directory
             for (File file : dir.listFiles()) {
                 file.delete();
             }
             dir.delete();
         }
-        // Do NOT delete user_data directory!
+        // Clean up user_data directory if empty
+        File userDataDir = new File(".\\user_data");
+        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
+            userDataDir.delete();
+        }
     }
 
     /**

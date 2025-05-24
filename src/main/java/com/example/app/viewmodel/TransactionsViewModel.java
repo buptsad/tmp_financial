@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  *   <li>Handles filtering, adding, deleting, and saving transactions</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class TransactionsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(TransactionsViewModel.class.getName());

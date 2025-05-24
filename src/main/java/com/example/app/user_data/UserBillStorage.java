@@ -20,9 +20,13 @@ import java.time.format.DateTimeFormatter;
  *   <li>Supports batch classification of transactions using AI</li>
  *   <li>Handles CSV escaping and parsing</li>
  * </ul>
- * </p>
+ 
  */
 public class UserBillStorage {
+    /** Private constructor to prevent instantiation */
+    private UserBillStorage() {
+        // Prevent instantiation
+    }
     private static final Logger LOGGER = Logger.getLogger(UserBillStorage.class.getName());
     private static final String BILL_FILENAME = "user_bill.csv";
     private static File billFile;

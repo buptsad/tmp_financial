@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  *   <li>Save and cancel changes</li>
  *   <li>Ask AI for assistance (placeholder)</li>
  * </ul>
- * </p>
+ 
  */
 public class TransactionsPanel extends JPanel implements TransactionChangeListener {
     private static final Logger LOGGER = Logger.getLogger(TransactionsPanel.class.getName());

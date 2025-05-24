@@ -20,7 +20,7 @@ import java.util.Map;
  *   <li>Budget Progress - Shows overall and category-specific budget progress</li>
  *   <li>Financial Tips - Provides personalized financial advice based on spending patterns</li>
  * </ul>
- * </p>
+ 
  */
 public class FinancialDetailsPanel extends JPanel implements CurrencyChangeListener, 
                                                            FinancialDetailsViewModel.FinancialDetailsChangeListener {

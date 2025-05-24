@@ -11,9 +11,14 @@ import java.util.logging.Logger;
  * <p>
  * This class handles user login verification, registration, and username availability checks.
  * User data is stored in the user_data directory, with each user having a separate folder and settings file.
- * </p>
+ 
  */
 public class UserAuthService {
+
+    /** Private constructor to prevent instantiation */
+    private UserAuthService() {
+        // Prevent instantiation
+    }
     private static final Logger LOGGER = Logger.getLogger(UserAuthService.class.getName());
     private static final String USER_DATA_BASE_PATH = ".\\user_data";
 

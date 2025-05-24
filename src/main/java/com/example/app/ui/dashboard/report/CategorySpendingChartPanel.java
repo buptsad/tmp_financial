@@ -28,13 +28,14 @@ import java.util.Map;
  *   <li>Budget - The allocated budget amount for each spending category</li>
  *   <li>Actual - The actual amount spent in each category</li>
  * </ul>
- * </p>
+ 
  */
 public class CategorySpendingChartPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
-    
+    /** ViewModel that provides data for the chart */
     private final CategorySpendingChartViewModel viewModel;
+    /** Chart panel for displaying the spending chart */
     private ChartPanel chartPanel;
-    
+
     /**
      * Constructs a new CategorySpendingChartPanel with the specified view model.
      *

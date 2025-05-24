@@ -22,7 +22,6 @@ import java.util.logging.Logger;
  *   <li>A table of budget categories with their allocated amounts and spending</li>
  *   <li>UI elements for editing and deleting budget categories</li>
  * </ul>
- * </p>
  */
 public class DashboardBudgetsPanel extends JPanel implements CurrencyChangeListener, BudgetChangeListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardBudgetsPanel.class.getName());
@@ -32,6 +31,7 @@ public class DashboardBudgetsPanel extends JPanel implements CurrencyChangeListe
     
     /** UI components */
     private final JPanel categoriesPanel;
+    /** Currency symbol for displaying budget amounts */
     private String currencySymbol;
     
     /**

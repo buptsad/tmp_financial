@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  *   <li>Change password and reset all settings to defaults</li>
  *   <li>Responsive to ViewModel changes</li>
  * </ul>
- * </p>
+ 
  */
 public class SettingsPanel extends JPanel implements SettingsChangeListener {
     private static final Logger LOGGER = Logger.getLogger(SettingsPanel.class.getName());
@@ -47,23 +47,35 @@ public class SettingsPanel extends JPanel implements SettingsChangeListener {
     private Dimension originalWindowSize;
 
     // Profile fields
+    /** Text field for editing the user's name */
     private JTextField nameField;
+    /** Text field for editing the user's email */
     private JTextField emailField;
+    /** Text field for editing the user's phone number */
     private JTextField phoneField;
 
     // Preferences fields
+    /** Combo box for selecting the default currency */
     private JComboBox<String> currencyComboBox;
+    /** Text field for editing the currency symbol */
     private JTextField currencySymbolField;
+    /** Radio button for selecting dark theme */
     private JRadioButton darkThemeRadio;
+    /** Radio button for selecting light theme */
     private JRadioButton lightThemeRadio;
 
     // Notification fields
+    /** Checkbox for enabling/disabling budget alerts */
     private JCheckBox budgetAlertsCheckBox;
+    /** Checkbox for enabling/disabling transaction alerts */
     private JCheckBox transactionAlertsCheckBox;
 
     // Security fields
+    /** Password field for entering the current password */
     private JPasswordField currentPasswordField;
+    /** Password field for entering the new password */
     private JPasswordField newPasswordField;
+    /** Password field for confirming the new password */
     private JPasswordField confirmPasswordField;
 
     /**

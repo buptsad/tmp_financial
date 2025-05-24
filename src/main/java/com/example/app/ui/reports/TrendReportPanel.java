@@ -35,7 +35,7 @@ import java.util.List;
  *   <li>Supports time range and interval selection for filtering data</li>
  *   <li>Listens to ViewModel and currency changes</li>
  * </ul>
- * </p>
+ 
  */
 public class TrendReportPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
 

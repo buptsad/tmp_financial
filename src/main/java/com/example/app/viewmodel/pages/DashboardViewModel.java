@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  *   <li>Supports registration and removal of dashboard change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardViewModel.class.getName());
@@ -49,8 +49,11 @@ public class DashboardViewModel implements DataRefreshListener {
 
     /** Panel name constants */
     public static final String OVERVIEW_PANEL = "OVERVIEW";
+    /** Panel name constants */
     public static final String TRANSACTIONS_PANEL = "TRANSACTIONS";
+    /** Panel name constants */
     public static final String BUDGETS_PANEL = "BUDGETS";
+    /** Panel name constants */
     public static final String REPORTS_PANEL = "REPORTS";
 
     /** Tracks the currently active dashboard panel */

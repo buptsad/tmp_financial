@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  *   <li>Supports registration and removal of budget change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardBudgetsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardBudgetsViewModel.class.getName());

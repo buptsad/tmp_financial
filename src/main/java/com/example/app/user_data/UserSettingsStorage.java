@@ -15,9 +15,13 @@ import java.util.logging.Logger;
  *   <li>Initializes storage with default settings if needed</li>
  *   <li>Provides methods to get and set the current username and file path</li>
  * </ul>
- * </p>
+ 
  */
 public class UserSettingsStorage {
+    /** Private constructor to prevent instantiation */
+    private UserSettingsStorage() {
+        // Prevent instantiation
+    }
     private static final Logger LOGGER = Logger.getLogger(UserSettingsStorage.class.getName());
     private static final String SETTINGS_FILENAME = "user_settings.properties";
     private static File settingsFile;

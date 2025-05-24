@@ -20,7 +20,7 @@ import java.util.ArrayList;
  *   <li>Supports registration and removal of change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class FinancialDetailsViewModel implements DataRefreshListener {
     private final FinanceData financeData;
@@ -108,44 +108,78 @@ public class FinancialDetailsViewModel implements DataRefreshListener {
         }
     }
     
-    // Methods to get financial data for the view
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public double getMonthlyBudget() {
         return financeData.getMonthlyBudget();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public double getTotalIncome() {
         return financeData.getTotalIncome();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public double getTotalExpenses() {
         return financeData.getTotalExpenses();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public double getTotalSavings() {
         return financeData.getTotalSavings();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public double getOverallBudgetPercentage() {
         return financeData.getOverallBudgetPercentage();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public Map<String, Double> getCategoryBudgets() {
         return financeData.getCategoryBudgets();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public Map<String, Double> getCategoryExpenses() {
         return financeData.getCategoryExpenses();
     }
-    
-    // Get financial advice data
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public String getAdvice() {
         return financialAdvice.getAdvice();
     }
-    
+    /**
+     * Gets the list of dates for the financial data.
+     *
+     * @return the list of dates
+     */
     public String getFormattedGenerationTime() {
         return financialAdvice.getFormattedGenerationTime();
     }
-    
     /**
      * Clean up when no longer needed
      */

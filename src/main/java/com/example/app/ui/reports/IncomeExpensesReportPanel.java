@@ -33,7 +33,7 @@ import java.util.Map;
  *   <li>Supports time range selection for filtering data</li>
  *   <li>Listens to ViewModel and currency changes</li>
  * </ul>
- * </p>
+ 
  */
 public class IncomeExpensesReportPanel extends JPanel implements CurrencyChangeListener, ChartDataChangeListener {
     /** The ViewModel providing income and expenses data */

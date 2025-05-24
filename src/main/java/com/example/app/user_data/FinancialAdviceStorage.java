@@ -16,9 +16,14 @@ import java.util.logging.Logger;
  *   <li>Initializes storage with default content if needed</li>
  *   <li>Loads and saves advice with timestamp</li>
  * </ul>
- * </p>
+ 
  */
 public class FinancialAdviceStorage {
+
+    /** Private constructor to prevent instantiation */
+    private FinancialAdviceStorage() {
+        // Prevent instantiation
+    }
     private static final Logger LOGGER = Logger.getLogger(FinancialAdviceStorage.class.getName());
     private static final String ADVICE_FILENAME = "user_advice.txt";
     private static File adviceFile;

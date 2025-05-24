@@ -12,7 +12,7 @@ import java.util.logging.Logger;
  * <p>
  * This class allows components to register as listeners for data changes,
  * and coordinates refresh events to ensure data consistency throughout the application.
- * </p>
+ 
  */
 public class DataRefreshManager {
     private static final Logger LOGGER = Logger.getLogger(DataRefreshManager.class.getName());

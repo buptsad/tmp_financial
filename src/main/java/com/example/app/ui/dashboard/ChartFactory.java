@@ -24,7 +24,14 @@ import java.util.Map;
  * styling and formatting appropriate for financial data visualization.
  */
 public class ChartFactory {
-    
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     * This class only contains static methods and should not be instantiated.
+     */
+    private ChartFactory() {
+        // Prevent instantiation
+    }
+
     /**
      * Creates a financial line chart showing income, expenses, and budget over time.
      * The chart displays three data series:

@@ -17,9 +17,14 @@ import java.time.format.DateTimeFormatter;
  *   <li>Initializes storage with headers if needed</li>
  *   <li>Handles CSV escaping and parsing</li>
  * </ul>
- * </p>
+ 
  */
 public class UserBudgetStorage {
+
+    /** Private constructor to prevent instantiation */
+    private UserBudgetStorage() {
+        // Prevent instantiation
+    }
     private static final Logger LOGGER = Logger.getLogger(UserBudgetStorage.class.getName());
     private static final String BUDGET_FILENAME = "user_budgets.csv";
     private static File budgetFile;

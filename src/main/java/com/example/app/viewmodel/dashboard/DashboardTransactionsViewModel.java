@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  *   <li>Supports registration and removal of transaction change listeners</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardTransactionsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardTransactionsViewModel.class.getName());
@@ -67,9 +67,32 @@ public class DashboardTransactionsViewModel implements DataRefreshListener {
             this.amount = amount;
         }
 
+        /**
+         * Gets the transaction date.
+         *
+         * @return the transaction date
+         */
         public LocalDate getDate() { return date; }
+
+        /**
+         * Gets the transaction description.
+         *
+         * @return the transaction description
+         */
         public String getDescription() { return description; }
+
+        /**
+         * Gets the transaction category.
+         *
+         * @return the transaction category
+         */
         public String getCategory() { return category; }
+
+        /**
+         * Gets the transaction amount.
+         *
+         * @return the transaction amount
+         */
         public double getAmount() { return amount; }
     }
 

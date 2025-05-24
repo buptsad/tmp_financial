@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  *   <li>Data preview</li>
  *   <li>Error handling</li>
  * </ul>
- * </p>
+ 
  */
 public class CSVImportDialog extends JDialog {
     /** Reference to the parent transactions panel */

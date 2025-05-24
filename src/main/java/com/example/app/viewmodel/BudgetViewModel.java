@@ -24,7 +24,7 @@ import java.util.*;
  *   <li>Handles AI-based budget suggestions</li>
  *   <li>Handles cleanup of listeners when no longer needed</li>
  * </ul>
- * </p>
+ 
  */
 public class BudgetViewModel implements DataRefreshListener {
     private final String username;

@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
  * This modal dialog allows users to input or modify a budget category name
  * and its corresponding budget amount. The dialog includes validation
  * to ensure valid inputs are provided.
- * </p>
+ 
  */
 public class BudgetDialog extends JDialog {
     /** Text field for entering the category name */

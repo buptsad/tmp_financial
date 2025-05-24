@@ -24,12 +24,12 @@ import java.util.List;
  *   <li>Color-coded transaction amounts (green for income, red for expenses)</li>
  *   <li>A button to navigate to the full transactions view</li>
  * </ul>
- * </p>
+ 
  * <p>
  * This panel implements both CurrencyChangeListener and TransactionChangeListener
  * to ensure that the display is updated when either currency settings or
  * transaction data changes.
- * </p>
+ 
  */
 public class DashboardTransactionsPanel extends JPanel implements CurrencyChangeListener, TransactionChangeListener {
     /** Table for displaying transaction data */

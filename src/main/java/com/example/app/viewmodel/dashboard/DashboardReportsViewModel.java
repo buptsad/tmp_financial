@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  *   <li>Handles data refresh events and reloads data as needed</li>
  *   <li>Provides access to the FinanceData model for charts</li>
  * </ul>
- * </p>
+ 
  */
 public class DashboardReportsViewModel implements DataRefreshListener {
     private static final Logger LOGGER = Logger.getLogger(DashboardReportsViewModel.class.getName());

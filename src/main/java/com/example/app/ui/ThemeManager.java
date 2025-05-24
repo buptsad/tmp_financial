@@ -10,7 +10,7 @@ import java.util.Properties;
  * <p>
  * This singleton class loads and saves the theme preference to a configuration file,
  * and provides methods to get or set the current theme.
- * </p>
+ 
  */
 public class ThemeManager {
     /** The configuration file name for storing theme settings */

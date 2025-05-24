@@ -314,31 +314,37 @@ public class FinanceData {
         }
         
         /**
+         * Gets the date of this transaction.
          * @return the transaction date
          */
         public LocalDate getDate() { return date; }
         
         /**
+         * Gets the description of this transaction.
          * @return the transaction description
          */
         public String getDescription() { return description; }
         
         /**
+         * Gets the category of this transaction.
          * @return the transaction category
          */
         public String getCategory() { return category; }
         
         /**
+         * Gets the amount of this transaction.
          * @return the transaction amount
          */
         public double getAmount() { return amount; }
         
         /**
+         * Determines if this transaction is an expense.
          * @return true if this is an expense (negative amount), false otherwise
          */
         public boolean isExpense() { return amount < 0; }
         
         /**
+         * Determines if this transaction is an income.
          * @return true if this is an income (positive or zero amount), false otherwise
          */
         public boolean isIncome() { return amount >= 0; }
