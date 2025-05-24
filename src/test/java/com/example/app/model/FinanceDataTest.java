@@ -7,17 +7,29 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for FinanceData class.
+ * Unit tests for the FinanceData class.
+ * Verifies data structure initialization, transaction importing, budget management,
+ * category percentage calculations, and other core functionality of the FinanceData model.
  */
 class FinanceDataTest {
 
+    /**
+     * The FinanceData instance used for testing.
+     */
     private FinanceData financeData;
 
+    /**
+     * Sets up a fresh FinanceData instance before each test.
+     */
     @BeforeEach
     void setUp() {
         financeData = new FinanceData();
     }
 
+    /**
+     * Tests that the initial state of FinanceData has properly initialized empty data structures.
+     * Verifies that all collections are initialized and not null.
+     */
     @Test
     @DisplayName("Initial state should have empty data structures")
     void testInitialState() {
@@ -29,6 +41,10 @@ class FinanceDataTest {
         assertNotNull(financeData.getTransactions());
     }
 
+    /**
+     * Tests that importing transactions correctly updates all relevant data structures.
+     * Verifies transaction list, daily and category summaries, and total calculations.
+     */
     @Test
     @DisplayName("Importing transactions updates all relevant data")
     void testImportTransactions() {
@@ -58,6 +74,10 @@ class FinanceDataTest {
         assertEquals(4880.0, financeData.getTotalSavings(), 0.01);
     }
 
+    /**
+     * Tests that budget allocation and retrieval functions correctly.
+     * Verifies that budget categories are properly created and default allocations are reasonable.
+     */
     @Test
     @DisplayName("Budget allocation and retrieval works")
     void testBudgetAllocation() {
@@ -73,6 +93,10 @@ class FinanceDataTest {
         assertEquals(4000.0, budgets.values().stream().mapToDouble(Double::doubleValue).sum(), 0.1);
     }
 
+    /**
+     * Tests that category percentage calculations return correct values.
+     * Verifies that percentages are within the expected range (0-100%).
+     */
     @Test
     @DisplayName("Category percentage calculation is correct")
     void testCategoryPercentage() {
@@ -83,6 +107,10 @@ class FinanceDataTest {
         assertTrue(percent > 0 && percent <= 100);
     }
 
+    /**
+     * Tests that expense and income descriptions and categories are correctly stored and retrieved.
+     * Verifies that the correct descriptions and categories are returned for a specific date.
+     */
     @Test
     @DisplayName("Expense and income descriptions and categories are correct")
     void testDescriptionsAndCategories() {
@@ -97,6 +125,10 @@ class FinanceDataTest {
         assertEquals("Food", financeData.getExpenseCategory(date));
     }
 
+    /**
+     * Tests that budget updates and deletions work correctly.
+     * Verifies that budgets can be added, updated, and removed.
+     */
     @Test
     @DisplayName("Budget update and deletion works")
     void testBudgetUpdateAndDelete() {
@@ -108,6 +140,10 @@ class FinanceDataTest {
         assertEquals(0.0, financeData.getCategoryBudget("TestCat"), 0.01);
     }
 
+    /**
+     * Tests that the overall budget percentage calculation returns the correct ratio.
+     * Verifies that the percentage is within the expected range (0-100%).
+     */
     @Test
     @DisplayName("getOverallBudgetPercentage returns correct ratio")
     void testOverallBudgetPercentage() {
@@ -120,6 +156,10 @@ class FinanceDataTest {
         assertTrue(percent > 0 && percent <= 100);
     }
 
+    /**
+     * Tests that the getDates method returns a sorted list of unique dates.
+     * Verifies that dates are returned in chronological order regardless of input order.
+     */
     @Test
     @DisplayName("getDates returns sorted unique dates")
     void testGetDates() {

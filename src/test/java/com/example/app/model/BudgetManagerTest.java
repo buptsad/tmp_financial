@@ -9,16 +9,30 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for BudgetManager class.
+ * Tests the saving and loading functionality of budget data to and from CSV files.
  */
 class BudgetManagerTest {
 
+    /**
+     * Temporary directory for test file operations.
+     */
     private static Path tempDir;
 
+    /**
+     * Creates a temporary directory for storing test files before running tests.
+     * 
+     * @throws IOException If the temporary directory cannot be created
+     */
     @BeforeAll
     static void setupClass() throws IOException {
         tempDir = Files.createTempDirectory("budget_manager_test");
     }
 
+    /**
+     * Cleans up the temporary directory and all files after all tests are complete.
+     * 
+     * @throws IOException If the temporary directory cannot be deleted
+     */
     @AfterAll
     static void cleanupClass() throws IOException {
         if (tempDir != null && Files.exists(tempDir)) {
@@ -29,6 +43,10 @@ class BudgetManagerTest {
         }
     }
 
+    /**
+     * Tests that budgets can be saved to a CSV file and then loaded back correctly.
+     * Verifies that all categories and their corresponding budget values are preserved.
+     */
     @Test
     @DisplayName("Should save and load budgets correctly")
     void testSaveAndLoadBudgets() {
@@ -50,6 +68,10 @@ class BudgetManagerTest {
         }
     }
 
+    /**
+     * Tests that loading budgets from a non-existent file returns an empty map.
+     * Ensures that the application doesn't crash when files don't exist.
+     */
     @Test
     @DisplayName("Should return empty map if file does not exist")
     void testLoadBudgetsFileNotExist() {
@@ -59,6 +81,12 @@ class BudgetManagerTest {
         assertTrue(loaded.isEmpty());
     }
 
+    /**
+     * Tests that the budget loading is resilient to invalid data.
+     * Verifies that it skips invalid lines but still processes valid ones.
+     * 
+     * @throws IOException If there is an error writing to the test file
+     */
     @Test
     @DisplayName("Should skip invalid lines and parse valid ones")
     void testLoadBudgetsWithInvalidLines() throws IOException {
@@ -79,6 +107,10 @@ class BudgetManagerTest {
         assertFalse(loaded.containsKey("Housing"));
     }
 
+    /**
+     * Tests that saving budgets overwrites any existing file.
+     * Ensures that old budget data is completely replaced with new data.
+     */
     @Test
     @DisplayName("Should overwrite existing file on save")
     void testOverwriteBudgetsFile() {

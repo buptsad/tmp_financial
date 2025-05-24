@@ -8,14 +8,30 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the UserSettings class.
+ * Tests the singleton pattern implementation, default initialization,
+ * settings persistence, and settings reset functionality.
+ */
 class UserSettingsTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_settings";
+    
+    /**
+     * Path to the settings file for the test user.
+     */
     private static final String SETTINGS_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_settings.properties";
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the settings file and its parent directory to avoid test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
-        // Clean up the advice file after all tests
+        // Clean up the settings file after all tests
         File file = new File(SETTINGS_FILE_PATH);
         if (file.exists()) {
             file.delete();
@@ -26,6 +42,11 @@ class UserSettingsTest {
         }
     }
 
+    /**
+     * Sets up the test environment before each test.
+     * Configures the storage username, removes any existing settings file,
+     * and resets the UserSettings singleton instance.
+     */
     @BeforeEach
     void setUp() {
         // Set username for storage and remove any existing settings file for isolation
@@ -38,6 +59,10 @@ class UserSettingsTest {
         resetUserSettingsSingleton();
     }
 
+    /**
+     * Cleans up after each test by removing the settings file
+     * and resetting the singleton instance.
+     */
     @AfterEach
     void tearDown() {
         // Clean up settings file after test
@@ -48,6 +73,10 @@ class UserSettingsTest {
         resetUserSettingsSingleton();
     }
 
+    /**
+     * Helper method to reset the UserSettings singleton instance using reflection.
+     * This ensures test isolation by creating a fresh instance for each test.
+     */
     private void resetUserSettingsSingleton() {
         try {
             java.lang.reflect.Field instanceField = UserSettings.class.getDeclaredField("instance");
@@ -58,6 +87,10 @@ class UserSettingsTest {
         }
     }
 
+    /**
+     * Tests that UserSettings initializes with default values when no settings file exists.
+     * Verifies that all properties have their expected default values.
+     */
     @Test
     @DisplayName("Should initialize with default values if no file exists")
     void testDefaultInitialization() {
@@ -73,6 +106,11 @@ class UserSettingsTest {
         assertEquals("", settings.getPasswordHash());
     }
 
+    /**
+     * Tests that settings are correctly saved to storage and can be loaded later.
+     * Sets various settings values, saves them, resets the singleton,
+     * and verifies the values are preserved when a new instance is created.
+     */
     @Test
     @DisplayName("Should save and load settings correctly")
     void testSaveAndLoadSettings() {
@@ -103,6 +141,11 @@ class UserSettingsTest {
         assertEquals("hash123", settings2.getPasswordHash());
     }
 
+    /**
+     * Tests that the resetToDefaults method properly restores all default values.
+     * Sets custom values, calls resetToDefaults, and verifies that all properties
+     * return to their default state.
+     */
     @Test
     @DisplayName("Should reset to default values")
     void testResetToDefaults() {
@@ -131,6 +174,10 @@ class UserSettingsTest {
         assertEquals("", settings.getPasswordHash());
     }
 
+    /**
+     * Tests that changes to settings are correctly persisted to the settings file.
+     * Verifies that the file exists and contains the expected property values.
+     */
     @Test
     @DisplayName("Should persist changes to settings file")
     void testSettingsFilePersistence() {

@@ -9,11 +9,27 @@ import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the FinancialAdvice class.
+ * These tests verify the functionality for creating, loading, and saving financial advice,
+ * including storage persistence, time tracking, and error handling.
+ */
 class FinancialAdviceTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_junit";
+    
+    /**
+     * Path to the advice file for the test user.
+     */
     private static final String ADVICE_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_advice.txt";
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the advice file and its parent directory to avoid test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
         // Clean up the advice file after all tests
@@ -27,6 +43,10 @@ class FinancialAdviceTest {
         }
     }
 
+    /**
+     * Removes the advice file before each test to ensure test isolation.
+     * This prevents state from one test affecting another.
+     */
     @BeforeEach
     void cleanAdviceFile() {
         // Remove the advice file before each test to ensure isolation
@@ -36,6 +56,10 @@ class FinancialAdviceTest {
         }
     }
 
+    /**
+     * Tests that the default constructor sets default advice and generation time.
+     * Verifies that the advice text contains expected content and a timestamp is created.
+     */
     @Test
     @DisplayName("Default constructor sets default advice and time")
     void testDefaultConstructor() {
@@ -45,6 +69,10 @@ class FinancialAdviceTest {
         assertTrue(advice.getAdvice().contains("Spring Festival"));
     }
 
+    /**
+     * Tests that the initialize method loads advice from storage and sets the username.
+     * Verifies that previously saved advice is correctly loaded during initialization.
+     */
     @Test
     @DisplayName("initialize loads advice from storage and sets username")
     void testInitializeLoadsFromStorage() {
@@ -62,6 +90,10 @@ class FinancialAdviceTest {
         assertEquals(now, advice.getGenerationTime());
     }
 
+    /**
+     * Tests that the setAdvice method updates advice text, timestamp, and saves to storage.
+     * Verifies that advice content and generation time are updated, and that changes are persisted to disk.
+     */
     @Test
     @DisplayName("setAdvice updates advice, time, and saves to storage")
     void testSetAdviceUpdatesAdviceAndSaves() {
@@ -95,6 +127,10 @@ class FinancialAdviceTest {
         }
     }
 
+    /**
+     * Tests that the regenerate method handles IOException gracefully.
+     * Verifies that no exceptions are thrown even when API calls might fail.
+     */
     @Test
     @DisplayName("regenerate handles IOException gracefully")
     void testRegenerateHandlesIOException() {

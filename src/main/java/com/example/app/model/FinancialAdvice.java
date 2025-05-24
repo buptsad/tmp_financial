@@ -8,27 +8,50 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * A model class representing personalized financial advice for users.
+ * This class handles the generation, storage, and retrieval of AI-generated
+ * financial advice based on user data.
+ */
 public class FinancialAdvice implements Serializable {
     private static final long serialVersionUID = 1L;
     
+    /**
+     * The financial advice text content.
+     */
     private String advice;
+    
+    /**
+     * The timestamp when the advice was generated.
+     */
     private LocalDateTime generationTime;
+    
+    /**
+     * The username associated with this advice.
+     */
     private String username;
     
-    // Default advice text if generation fails
+    /**
+     * Default advice text used if AI generation fails or before
+     * the first advice is generated.
+     */
     private static final String DEFAULT_ADVICE = 
             "You've spent 6000 on Spring Festival. It is 60% of your monthly budget. " +
             "Please be careful with your spending.\n" +
             "The Qingming Festival is coming soon, and you may need to spend more. " +
             "Please be careful with your budgets.";
     
+    /**
+     * Creates a new FinancialAdvice instance with default advice.
+     */
     public FinancialAdvice() {
         this.advice = DEFAULT_ADVICE;
         this.generationTime = LocalDateTime.now();
     }
     
     /**
-     * Initialize with a specific username to load/save user-specific advice
+     * Initializes the advice with a specific username to load/save user-specific advice.
+     * 
      * @param username The username for advice storage
      */
     public void initialize(String username) {
@@ -38,7 +61,7 @@ public class FinancialAdvice implements Serializable {
     }
     
     /**
-     * Load advice from storage file
+     * Loads advice from storage file.
      */
     private void loadFromStorage() {
         Object[] loadedData = FinancialAdviceStorage.loadAdvice();
@@ -48,10 +71,21 @@ public class FinancialAdvice implements Serializable {
         }
     }
     
+    /**
+     * Gets the current financial advice text.
+     * 
+     * @return The financial advice text
+     */
     public String getAdvice() {
         return advice;
     }
     
+    /**
+     * Sets new financial advice text, updates the generation time,
+     * saves to storage, and notifies listeners of the change.
+     * 
+     * @param advice The new financial advice text to set
+     */
     public void setAdvice(String advice) {
         this.advice = advice;
         this.generationTime = LocalDateTime.now();
@@ -63,7 +97,7 @@ public class FinancialAdvice implements Serializable {
     }
     
     /**
-     * Save current advice to storage file
+     * Saves current advice to storage file.
      */
     private void saveToStorage() {
         if (username != null) {
@@ -71,17 +105,29 @@ public class FinancialAdvice implements Serializable {
         }
     }
     
+    /**
+     * Gets the timestamp when the advice was generated.
+     * 
+     * @return The generation timestamp
+     */
     public LocalDateTime getGenerationTime() {
         return generationTime;
     }
     
+    /**
+     * Gets the formatted generation time as a human-readable string.
+     * 
+     * @return The formatted date and time string (e.g., "May 24, 2025 14:30")
+     */
     public String getFormattedGenerationTime() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
         return generationTime.format(formatter);
     }
     
     /**
-     * Regenerate financial advice using AI
+     * Regenerates financial advice using AI.
+     * Makes an API call to the DeepSeek AI service to get personalized
+     * financial advice based on the user's data.
      */
     public void regenerate() {
         if (username == null) return;
