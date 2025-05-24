@@ -150,7 +150,12 @@ public class DataRefreshManager {
         notifyRefresh(RefreshType.ALL);
     }
     
-    // Add this method at the end of the class (for test use only)
+    /**
+     * Resets the singleton instance of DataRefreshManager.
+     * <p>
+     * <b>For testing purposes only.</b> This method allows tests to reset the singleton
+     * instance so that a fresh instance can be created. It should not be used in production code.
+     */
     static void _resetForTests() {
         instance = null;
     }
