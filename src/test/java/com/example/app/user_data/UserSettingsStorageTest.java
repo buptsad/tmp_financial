@@ -33,23 +33,15 @@ class UserSettingsStorageTest {
 
     @AfterAll
     static void cleanUp() {
-        // Clean up settings file and parent directory after all tests
-        if (SETTINGS_FILE.exists()) {
-            SETTINGS_FILE.delete();
-        }
+        // Clean up only the test user's directory and files
         File dir = SETTINGS_FILE.getParentFile();
         if (dir.exists() && dir.isDirectory()) {
-            // Delete all files in the directory
             for (File file : dir.listFiles()) {
                 file.delete();
             }
             dir.delete();
         }
-        // Clean up user_data directory if empty
-        File userDataDir = new File(".\\user_data");
-        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
-            userDataDir.delete();
-        }
+        // Do NOT delete user_data directory!
     }
 
     @Test

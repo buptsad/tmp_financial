@@ -32,9 +32,6 @@ class FinancialAdviceStorageTest {
 
     @AfterAll
     static void cleanUp() {
-        if (ADVICE_FILE.exists()) {
-            ADVICE_FILE.delete();
-        }
         File dir = ADVICE_FILE.getParentFile();
         if (dir.exists() && dir.isDirectory()) {
             for (File file : dir.listFiles()) {
@@ -42,10 +39,7 @@ class FinancialAdviceStorageTest {
             }
             dir.delete();
         }
-        File userDataDir = new File(".\\user_data");
-        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
-            userDataDir.delete();
-        }
+        // Do NOT delete user_data directory!
     }
 
     @Test

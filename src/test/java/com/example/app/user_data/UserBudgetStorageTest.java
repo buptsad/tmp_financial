@@ -34,10 +34,6 @@ class UserBudgetStorageTest {
 
     @AfterAll
     static void cleanUp() {
-        // Clean up budget file and parent directory after all tests
-        if (BUDGET_FILE.exists()) {
-            BUDGET_FILE.delete();
-        }
         File dir = BUDGET_FILE.getParentFile();
         if (dir.exists() && dir.isDirectory()) {
             for (File file : dir.listFiles()) {
@@ -45,11 +41,7 @@ class UserBudgetStorageTest {
             }
             dir.delete();
         }
-        // Clean up user_data directory if empty
-        File userDataDir = new File(".\\user_data");
-        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
-            userDataDir.delete();
-        }
+        // Do NOT delete user_data directory!
     }
 
     @Test

@@ -28,16 +28,13 @@ class UserAuthServiceTest {
 
     @AfterAll
     static void cleanUp() {
-        File userDataDir = new File(".\\user_data");
         if (USER_DIR.exists()) {
             for (File file : USER_DIR.listFiles()) {
                 file.delete();
             }
             USER_DIR.delete();
         }
-        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
-            userDataDir.delete();
-        }
+        // Do NOT delete user_data directory!
     }
 
     @Test

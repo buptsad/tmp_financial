@@ -73,6 +73,7 @@ public class AIPanel extends JPanel implements AIViewModel.AIDataChangeListener 
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
         regenerateButton = new JButton("Regenerate Financial Advice");
+        regenerateButton.setName("regenerateButton");
         regenerateButton.setFocusPainted(false);
         regenerateButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         regenerateButton.addActionListener(e -> viewModel.regenerateAdvice());
@@ -85,6 +86,7 @@ public class AIPanel extends JPanel implements AIViewModel.AIDataChangeListener 
 
         // Chat area (scrollable)
         chatArea = new JTextArea();
+        chatArea.setName("chatArea");
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
         chatArea.setWrapStyleWord(true);
@@ -98,11 +100,13 @@ public class AIPanel extends JPanel implements AIViewModel.AIDataChangeListener 
         // Input panel (text field + send button)
         JPanel inputPanel = new JPanel(new BorderLayout(10, 0));
         inputField = new JTextField();
+        inputField.setName("inputField");
         inputField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         inputField.setMargin(new Insets(5, 10, 5, 10));
         inputPanel.add(inputField, BorderLayout.CENTER);
 
         sendButton = new JButton("Send");
+        sendButton.setName("sendButton");
         sendButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         sendButton.setFocusPainted(false);
         sendButton.setCursor(new Cursor(Cursor.HAND_CURSOR));

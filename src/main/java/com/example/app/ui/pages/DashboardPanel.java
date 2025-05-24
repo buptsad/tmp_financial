@@ -67,6 +67,7 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener, Da
 
         // Welcome section
         JLabel welcomeLabel = new JLabel("Welcome to Your Financial Dashboard");
+        welcomeLabel.setName("dashboardWelcomeLabel");
         welcomeLabel.setFont(new Font(welcomeLabel.getFont().getName(), Font.BOLD, 22));
         add(welcomeLabel, BorderLayout.NORTH);
 
@@ -235,9 +236,13 @@ public class DashboardPanel extends JPanel implements CurrencyChangeListener, Da
 
         // Create buttons with hover effect
         overviewButton = createStyledButton("Overview", DashboardViewModel.OVERVIEW_PANEL);
+        overviewButton.setName("overviewButton");
         transactionsButton = createStyledButton("Transactions", DashboardViewModel.TRANSACTIONS_PANEL);
+        transactionsButton.setName("transactionsButton");
         budgetsButton = createStyledButton("Budgets", DashboardViewModel.BUDGETS_PANEL);
+        budgetsButton.setName("budgetsButton");
         reportsButton = createStyledButton("Reports", DashboardViewModel.REPORTS_PANEL);
+        reportsButton.setName("reportsButton");
 
         panel.add(overviewButton);
         panel.add(transactionsButton);

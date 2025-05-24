@@ -33,10 +33,6 @@ class UserBillStorageTest {
 
     @AfterAll
     static void cleanUp() {
-        // Clean up bill file and parent directory after all tests
-        if (BILL_FILE.exists()) {
-            BILL_FILE.delete();
-        }
         File dir = BILL_FILE.getParentFile();
         if (dir.exists() && dir.isDirectory()) {
             for (File file : dir.listFiles()) {
@@ -44,11 +40,7 @@ class UserBillStorageTest {
             }
             dir.delete();
         }
-        // Clean up user_data directory if empty
-        File userDataDir = new File(".\\user_data");
-        if (userDataDir.exists() && userDataDir.isDirectory() && userDataDir.list().length == 0) {
-            userDataDir.delete();
-        }
+        // Do NOT delete user_data directory!
     }
 
     @Test

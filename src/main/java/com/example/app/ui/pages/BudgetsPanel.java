@@ -582,6 +582,14 @@ public class BudgetsPanel extends JPanel implements CurrencyChangeListener, Budg
             return this;
         }
     }
+
+    /**
+     * Returns the ViewModel associated with this panel.
+     * @return the BudgetViewModel instance
+     */
+    BudgetViewModel getViewModel() {
+        return viewModel;
+    }
 }
 
 
