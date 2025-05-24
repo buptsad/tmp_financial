@@ -17,16 +17,30 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Comprehensive test class for DataRefreshManager
+ * Comprehensive test class for DataRefreshManager.
+ * Tests the singleton pattern implementation, listener management, refresh notifications,
+ * error handling, and concurrency behavior of the DataRefreshManager class.
  */
 class DataRefreshManagerTest {
     
+    /**
+     * Instance of DataRefreshManager to be tested.
+     */
     private DataRefreshManager refreshManager;
+    
+    /**
+     * Test listener instance used across multiple test methods.
+     */
     private TestDataRefreshListener testListener;
     
+    /**
+     * Sets up the test environment before each test method.
+     * Resets the DataRefreshManager singleton, gets a fresh instance,
+     * and creates a clean test listener.
+     */
     @BeforeEach
     void setUp() {
-        DataRefreshManager._resetForTests(); // <-- Add this line
+        DataRefreshManager._resetForTests(); // Reset singleton for isolated tests
         refreshManager = DataRefreshManager.getInstance();
         testListener = new TestDataRefreshListener();
         
@@ -34,6 +48,9 @@ class DataRefreshManagerTest {
         refreshManager.removeListener(testListener);
     }
     
+    /**
+     * Cleans up after each test by removing any registered test listeners.
+     */
     @AfterEach
     void tearDown() {
         // Clean up listeners after each test
@@ -42,10 +59,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the singleton pattern implementation of DataRefreshManager.
+     */
     @Nested
     @DisplayName("Singleton Pattern Tests")
     class SingletonPatternTests {
         
+        /**
+         * Tests that multiple calls to getInstance() return the same instance.
+         */
         @Test
         @DisplayName("Should return same instance for multiple getInstance calls")
         void shouldReturnSameInstanceForMultipleGetInstanceCalls() {
@@ -58,6 +81,11 @@ class DataRefreshManagerTest {
             assertSame(instance1, instance3, "getInstance should return the same instance");
         }
         
+        /**
+         * Tests that the singleton pattern is maintained across multiple threads.
+         * 
+         * @throws InterruptedException If thread execution is interrupted
+         */
         @Test
         @DisplayName("Should maintain singleton across different threads")
         void shouldMaintainSingletonAcrossDifferentThreads() throws InterruptedException {
@@ -94,10 +122,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the listener management functionality of DataRefreshManager.
+     */
     @Nested
     @DisplayName("Listener Management Tests")
     class ListenerManagementTests {
         
+        /**
+         * Tests that listeners can be successfully added to the manager.
+         */
         @Test
         @DisplayName("Should add listener successfully")
         void shouldAddListenerSuccessfully() {
@@ -111,6 +145,9 @@ class DataRefreshManagerTest {
                 "Listener should receive correct refresh type");
         }
         
+        /**
+         * Tests that duplicate listeners are not added multiple times.
+         */
         @Test
         @DisplayName("Should not add duplicate listeners")
         void shouldNotAddDuplicateListeners() {
@@ -125,6 +162,9 @@ class DataRefreshManagerTest {
                 "Listener should only receive one notification despite being added multiple times");
         }
         
+        /**
+         * Tests that listeners can be successfully removed from the manager.
+         */
         @Test
         @DisplayName("Should remove listener successfully")
         void shouldRemoveListenerSuccessfully() {
@@ -138,6 +178,9 @@ class DataRefreshManagerTest {
                 "Removed listener should not receive refresh notifications");
         }
         
+        /**
+         * Tests that removing a non-existent listener does not cause errors.
+         */
         @Test
         @DisplayName("Should handle removing non-existent listener gracefully")
         void shouldHandleRemovingNonExistentListenerGracefully() {
@@ -146,6 +189,9 @@ class DataRefreshManagerTest {
             }, "Removing non-existent listener should not throw exception");
         }
         
+        /**
+         * Tests that multiple listeners can be managed simultaneously.
+         */
         @Test
         @DisplayName("Should handle multiple listeners")
         void shouldHandleMultipleListeners() {
@@ -177,10 +223,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the refresh notification functionality of DataRefreshManager.
+     */
     @Nested
     @DisplayName("Refresh Notification Tests")
     class RefreshNotificationTests {
         
+        /**
+         * Tests notification of TRANSACTIONS refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of TRANSACTIONS refresh")
         void shouldNotifyListenersOfTransactionsRefresh() {
@@ -192,6 +244,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.TRANSACTIONS, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests notification of BUDGETS refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of BUDGETS refresh")
         void shouldNotifyListenersOfBudgetsRefresh() {
@@ -203,6 +258,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.BUDGETS, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests notification of CURRENCY refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of CURRENCY refresh")
         void shouldNotifyListenersOfCurrencyRefresh() {
@@ -214,6 +272,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.CURRENCY, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests notification of SETTINGS refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of SETTINGS refresh")
         void shouldNotifyListenersOfSettingsRefresh() {
@@ -225,6 +286,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.SETTINGS, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests notification of ADVICE refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of ADVICE refresh")
         void shouldNotifyListenersOfAdviceRefresh() {
@@ -236,6 +300,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.ADVICE, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests notification of ALL refresh type.
+         */
         @Test
         @DisplayName("Should notify listeners of ALL refresh")
         void shouldNotifyListenersOfAllRefresh() {
@@ -247,6 +314,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.ALL, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests that multiple sequential refresh notifications are handled correctly.
+         */
         @Test
         @DisplayName("Should handle multiple sequential refresh notifications")
         void shouldHandleMultipleSequentialRefreshNotifications() {
@@ -262,10 +332,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the convenience methods for triggering specific refresh types.
+     */
     @Nested
     @DisplayName("Convenience Method Tests")
     class ConvenienceMethodTests {
         
+        /**
+         * Tests the refreshTransactions() convenience method.
+         */
         @Test
         @DisplayName("Should trigger TRANSACTIONS refresh via convenience method")
         void shouldTriggerTransactionsRefreshViaConvenienceMethod() {
@@ -277,6 +353,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.TRANSACTIONS, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests the refreshBudgets() convenience method.
+         */
         @Test
         @DisplayName("Should trigger BUDGETS refresh via convenience method")
         void shouldTriggerBudgetsRefreshViaConvenienceMethod() {
@@ -288,6 +367,9 @@ class DataRefreshManagerTest {
             assertEquals(DataRefreshManager.RefreshType.BUDGETS, testListener.getLastRefreshType());
         }
         
+        /**
+         * Tests the refreshAll() convenience method.
+         */
         @Test
         @DisplayName("Should trigger ALL refresh via convenience method")
         void shouldTriggerAllRefreshViaConvenienceMethod() {
@@ -300,10 +382,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the error handling capabilities of DataRefreshManager.
+     */
     @Nested
     @DisplayName("Error Handling Tests")
     class ErrorHandlingTests {
         
+        /**
+         * Tests that exceptions thrown by listeners are handled gracefully.
+         */
         @Test
         @DisplayName("Should handle listener exceptions gracefully")
         void shouldHandleListenerExceptionsGracefully() {
@@ -329,6 +417,9 @@ class DataRefreshManagerTest {
             }
         }
         
+        /**
+         * Tests that recursive refresh calls are prevented to avoid infinite loops.
+         */
         @Test
         @DisplayName("Should prevent recursive refresh calls")
         void shouldPreventRecursiveRefreshCalls() {
@@ -352,10 +443,18 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the concurrency safety of DataRefreshManager operations.
+     */
     @Nested
     @DisplayName("Concurrency Tests")
     class ConcurrencyTests {
         
+        /**
+         * Tests that concurrent listener addition and removal operations are thread-safe.
+         * 
+         * @throws InterruptedException If thread execution is interrupted
+         */
         @Test
         @DisplayName("Should handle concurrent listener addition and removal")
         void shouldHandleConcurrentListenerAdditionAndRemoval() throws InterruptedException {
@@ -389,6 +488,11 @@ class DataRefreshManagerTest {
             assertEquals(0, errorCount.get(), "No errors should occur during concurrent operations");
         }
         
+        /**
+         * Tests that concurrent refresh notifications are thread-safe.
+         * 
+         * @throws InterruptedException If thread execution is interrupted
+         */
         @Test
         @DisplayName("Should handle concurrent refresh notifications")
         void shouldHandleConcurrentRefreshNotifications() throws InterruptedException {
@@ -440,10 +544,16 @@ class DataRefreshManagerTest {
         }
     }
     
+    /**
+     * Tests that verify the RefreshType enum functionality.
+     */
     @Nested
     @DisplayName("RefreshType Enum Tests")
     class RefreshTypeEnumTests {
         
+        /**
+         * Tests that all expected RefreshType enum values exist.
+         */
         @Test
         @DisplayName("Should have all expected RefreshType values")
         void shouldHaveAllExpectedRefreshTypeValues() {
@@ -460,6 +570,9 @@ class DataRefreshManagerTest {
             assertTrue(containsType(types, DataRefreshManager.RefreshType.ALL));
         }
         
+        /**
+         * Tests that all RefreshType enum values can be handled correctly.
+         */
         @Test
         @DisplayName("Should handle all RefreshType enum values")
         void shouldHandleAllRefreshTypeEnumValues() {
@@ -477,6 +590,13 @@ class DataRefreshManagerTest {
             }
         }
         
+        /**
+         * Helper method to check if a specific RefreshType exists in an array.
+         * 
+         * @param types Array of RefreshType values to search
+         * @param target The RefreshType to find
+         * @return true if target is found in types, false otherwise
+         */
         private boolean containsType(DataRefreshManager.RefreshType[] types, DataRefreshManager.RefreshType target) {
             for (DataRefreshManager.RefreshType type : types) {
                 if (type == target) {
@@ -487,46 +607,91 @@ class DataRefreshManagerTest {
         }
     }
     
-    // Test helper classes
+    /**
+     * Test implementation of DataRefreshListener for testing purposes.
+     * Tracks refresh count and the last refresh type received.
+     */
     private static class TestDataRefreshListener implements DataRefreshListener {
         private final AtomicInteger refreshCount = new AtomicInteger(0);
         private final AtomicReference<DataRefreshManager.RefreshType> lastRefreshType = new AtomicReference<>();
         
+        /**
+         * Called when a data refresh occurs.
+         * 
+         * @param type The type of refresh that occurred
+         */
         @Override
         public void onDataRefresh(DataRefreshManager.RefreshType type) {
             refreshCount.incrementAndGet();
             lastRefreshType.set(type);
         }
         
+        /**
+         * Gets the number of refresh notifications received.
+         * 
+         * @return The refresh count
+         */
         public int getRefreshCount() {
             return refreshCount.get();
         }
         
+        /**
+         * Gets the last refresh type received.
+         * 
+         * @return The last refresh type
+         */
         public DataRefreshManager.RefreshType getLastRefreshType() {
             return lastRefreshType.get();
         }
         
+        /**
+         * Resets the refresh count and last refresh type.
+         */
         public void reset() {
             refreshCount.set(0);
             lastRefreshType.set(null);
         }
     }
     
+    /**
+     * Test implementation of DataRefreshListener that throws an exception
+     * when a refresh notification is received.
+     */
     private static class ExceptionThrowingListener implements DataRefreshListener {
+        /**
+         * Called when a data refresh occurs. Always throws a RuntimeException.
+         * 
+         * @param type The type of refresh that occurred
+         * @throws RuntimeException Always thrown for testing exception handling
+         */
         @Override
         public void onDataRefresh(DataRefreshManager.RefreshType type) {
             throw new RuntimeException("Test exception from listener");
         }
     }
     
+    /**
+     * Test implementation of DataRefreshListener that attempts to create
+     * a recursive refresh call when a notification is received.
+     */
     private static class RecursiveRefreshListener implements DataRefreshListener {
         private final DataRefreshManager refreshManager;
         private final AtomicInteger callCount = new AtomicInteger(0);
         
+        /**
+         * Creates a new recursive refresh listener.
+         * 
+         * @param refreshManager The refresh manager to trigger recursive notifications on
+         */
         public RecursiveRefreshListener(DataRefreshManager refreshManager) {
             this.refreshManager = refreshManager;
         }
         
+        /**
+         * Called when a data refresh occurs. Attempts to trigger another refresh.
+         * 
+         * @param type The type of refresh that occurred
+         */
         @Override
         public void onDataRefresh(DataRefreshManager.RefreshType type) {
             callCount.incrementAndGet();
@@ -534,6 +699,11 @@ class DataRefreshManagerTest {
             refreshManager.notifyRefresh(DataRefreshManager.RefreshType.TRANSACTIONS);
         }
         
+        /**
+         * Gets the number of times this listener has been called.
+         * 
+         * @return The call count
+         */
         public int getCallCount() {
             return callCount.get();
         }

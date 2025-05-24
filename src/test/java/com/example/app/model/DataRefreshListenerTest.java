@@ -10,14 +10,25 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test class for DataRefreshListener interface and its implementations
+ * Test class for DataRefreshListener interface and its implementations.
+ * Verifies the contract, behavior, and integration scenarios of the DataRefreshListener
+ * functional interface with various implementation approaches.
  */
 class DataRefreshListenerTest {
     
+    /**
+     * Tests that verify the contract requirements of the DataRefreshListener interface.
+     * These tests ensure that the interface can be implemented in various ways and
+     * handles all expected input types correctly.
+     */
     @Nested
     @DisplayName("Interface Contract Tests")
     class InterfaceContractTests {
         
+        /**
+         * Tests that DataRefreshListener can be implemented as a lambda expression.
+         * Verifies that a lambda implementation can be created and called without errors.
+         */
         @Test
         @DisplayName("Should be a functional interface")
         void shouldBeFunctionalInterface() {
@@ -34,6 +45,10 @@ class DataRefreshListenerTest {
             }, "Lambda implementation should be callable");
         }
         
+        /**
+         * Tests that the listener implementation can handle all possible RefreshType enum values.
+         * Verifies that each enum value is correctly processed and stored by the listener.
+         */
         @Test
         @DisplayName("Should handle all RefreshType enum values")
         void shouldHandleAllRefreshTypeEnumValues() {
@@ -51,6 +66,10 @@ class DataRefreshListenerTest {
             }
         }
         
+        /**
+         * Tests that the listener implementation handles null RefreshType values gracefully.
+         * Verifies that no exceptions are thrown and the null value is correctly stored.
+         */
         @Test
         @DisplayName("Should handle null RefreshType gracefully")
         void shouldHandleNullRefreshTypeGracefully() {
@@ -64,10 +83,19 @@ class DataRefreshListenerTest {
         }
     }
     
+    /**
+     * Tests that verify the behavior of specific DataRefreshListener implementations.
+     * These tests ensure that implementations correctly track state and handle various
+     * call patterns as expected.
+     */
     @Nested
     @DisplayName("Implementation Behavior Tests")
     class ImplementationBehaviorTests {
         
+        /**
+         * Tests that the listener implementation correctly tracks refresh calls.
+         * Verifies that call count and last refresh type are accurately maintained.
+         */
         @Test
         @DisplayName("Should track refresh calls correctly")
         void shouldTrackRefreshCallsCorrectly() {
@@ -93,6 +121,10 @@ class DataRefreshListenerTest {
             assertEquals(DataRefreshManager.RefreshType.BUDGETS, listener.getLastRefreshType());
         }
         
+        /**
+         * Tests that the listener implementation can handle a large number of rapid calls.
+         * Verifies that all calls are accurately counted without errors.
+         */
         @Test
         @DisplayName("Should handle rapid successive calls")
         void shouldHandleRapidSuccessiveCalls() {
@@ -109,6 +141,10 @@ class DataRefreshListenerTest {
                 "Should handle " + callCount + " rapid successive calls");
         }
         
+        /**
+         * Tests that the listener implementation can reset its state correctly.
+         * Verifies that after reset, call count returns to zero and last refresh type to null.
+         */
         @Test
         @DisplayName("Should reset state correctly")
         void shouldResetStateCorrectly() {
@@ -130,10 +166,19 @@ class DataRefreshListenerTest {
         }
     }
     
+    /**
+     * Tests that verify support for multiple different implementations of DataRefreshListener.
+     * These tests ensure that the interface can be implemented in various ways and
+     * that all implementations function correctly.
+     */
     @Nested
     @DisplayName("Multiple Implementation Tests")
     class MultipleImplementationTests {
         
+        /**
+         * Tests that DataRefreshListener can be implemented in multiple different ways.
+         * Verifies that lambda, anonymous class, and concrete class implementations all work correctly.
+         */
         @Test
         @DisplayName("Should support multiple different implementations")
         void shouldSupportMultipleDifferentImplementations() {
@@ -166,6 +211,10 @@ class DataRefreshListenerTest {
             assertEquals(testType, customListener.getLastRefreshType(), "Custom listener should receive correct type");
         }
         
+        /**
+         * Tests the behavior when a listener implementation throws an exception.
+         * Verifies that exceptions are propagated correctly when called directly.
+         */
         @Test
         @DisplayName("Should handle exception in listener implementations")
         void shouldHandleExceptionInListenerImplementations() {
@@ -181,10 +230,19 @@ class DataRefreshListenerTest {
         }
     }
     
+    /**
+     * Tests that verify the integration of DataRefreshListener with the DataRefreshManager.
+     * These tests ensure that listeners work correctly when registered with the manager
+     * and receive notifications as expected.
+     */
     @Nested
     @DisplayName("Integration Scenarios")
     class IntegrationScenarios {
         
+        /**
+         * Tests that DataRefreshListener works correctly when integrated with DataRefreshManager.
+         * Verifies that the listener receives all notifications from the manager.
+         */
         @Test
         @DisplayName("Should work correctly with DataRefreshManager")
         void shouldWorkCorrectlyWithDataRefreshManager() {
@@ -209,6 +267,10 @@ class DataRefreshListenerTest {
             }
         }
         
+        /**
+         * Tests that the listener maintains its state across multiple manager operations.
+         * Verifies that the listener's state persists even when removed and re-added to the manager.
+         */
         @Test
         @DisplayName("Should maintain state across manager operations")
         void shouldMaintainStateAcrossManagerOperations() {
@@ -240,6 +302,10 @@ class DataRefreshListenerTest {
             }
         }
         
+        /**
+         * Tests that multiple listeners of the same implementation type can be registered.
+         * Verifies that all listeners receive notifications correctly.
+         */
         @Test
         @DisplayName("Should handle multiple listeners with same implementation")
         void shouldHandleMultipleListenersWithSameImplementation() {
@@ -272,25 +338,48 @@ class DataRefreshListenerTest {
         }
     }
     
-    // Test helper class
+    /**
+     * Helper class that implements DataRefreshListener for testing purposes.
+     * Tracks call count and last refresh type for verification in tests.
+     */
     private static class TestDataRefreshListener implements DataRefreshListener {
         private final AtomicInteger callCount = new AtomicInteger(0);
         private final AtomicReference<DataRefreshManager.RefreshType> lastRefreshType = new AtomicReference<>();
         
+        /**
+         * Implements the onDataRefresh method from the DataRefreshListener interface.
+         * Increments the call count and stores the refresh type for later verification.
+         *
+         * @param type The type of refresh that occurred
+         */
         @Override
         public void onDataRefresh(DataRefreshManager.RefreshType type) {
             callCount.incrementAndGet();
             lastRefreshType.set(type);
         }
         
+        /**
+         * Gets the current call count.
+         *
+         * @return The number of times onDataRefresh has been called
+         */
         public int getCallCount() {
             return callCount.get();
         }
         
+        /**
+         * Gets the last refresh type that was received.
+         *
+         * @return The last DataRefreshManager.RefreshType passed to onDataRefresh
+         */
         public DataRefreshManager.RefreshType getLastRefreshType() {
             return lastRefreshType.get();
         }
         
+        /**
+         * Resets the state of this listener.
+         * Sets call count to 0 and last refresh type to null.
+         */
         public void reset() {
             callCount.set(0);
             lastRefreshType.set(null);

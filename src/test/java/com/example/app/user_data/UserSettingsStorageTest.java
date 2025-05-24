@@ -8,12 +8,33 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the UserSettingsStorage class.
+ * Tests the functionality for reading and writing user settings to storage,
+ * including file and directory creation, settings persistence, and default value handling.
+ */
 class UserSettingsStorageTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_settingsstorage";
+    
+    /**
+     * Path to the settings file for the test user.
+     */
     private static final String SETTINGS_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_settings.properties";
+    
+    /**
+     * File object representing the settings file.
+     */
     private static final File SETTINGS_FILE = new File(SETTINGS_FILE_PATH);
 
+    /**
+     * Sets up the test environment before each test.
+     * Cleans up any existing test files and directories, then initializes
+     * the UserSettingsStorage with the test username.
+     */
     @BeforeEach
     void setUp() {
         // Clean up before test
@@ -31,6 +52,11 @@ class UserSettingsStorageTest {
         UserSettingsStorage.setUsername(TEST_USERNAME);
     }
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the settings file, its parent directory, and the user_data directory
+     * if it's empty to avoid leaving test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
         // Clean up only the test user's directory and files
@@ -44,6 +70,10 @@ class UserSettingsStorageTest {
         // Do NOT delete user_data directory!
     }
 
+    /**
+     * Tests that initializing the storage creates the necessary file and directory.
+     * Verifies that both the settings file and its parent directory are created.
+     */
     @Test
     @DisplayName("Should create settings file and directory if not exist")
     void testInitializeStorageCreatesFileAndDirectory() {
@@ -52,6 +82,10 @@ class UserSettingsStorageTest {
         assertTrue(SETTINGS_FILE.getParentFile().exists(), "Settings directory should be created");
     }
 
+    /**
+     * Tests that settings can be saved and loaded correctly.
+     * Verifies that all properties are preserved when saved and loaded.
+     */
     @Test
     @DisplayName("Should write and read settings correctly")
     void testSaveAndLoadSettings() {
@@ -71,6 +105,10 @@ class UserSettingsStorageTest {
         assertEquals("true", loaded.getProperty("theme.dark"));
     }
 
+    /**
+     * Tests that default settings are loaded if the settings file does not exist.
+     * Verifies that when the file is missing, default settings are created with expected values.
+     */
     @Test
     @DisplayName("Should load default settings if file does not exist")
     void testLoadDefaultSettingsIfFileMissing() {
@@ -92,6 +130,10 @@ class UserSettingsStorageTest {
         assertEquals("", loaded.getProperty("security.password.hash"));
     }
 
+    /**
+     * Tests that null is returned if the file is missing after initialization.
+     * Verifies that if the file is deleted after storage initialization, loadSettings returns null.
+     */
     @Test
     @DisplayName("Should return null if file is missing after initialization")
     void testLoadSettingsReturnsNullIfFileMissing() {
@@ -101,6 +143,12 @@ class UserSettingsStorageTest {
         assertNull(loaded, "Should return null if file is missing");
     }
 
+    /**
+     * Tests that settings are correctly persisted to disk.
+     * Verifies the file content by reading the file directly and checking property values.
+     * 
+     * @throws Exception If there is an error reading the file
+     */
     @Test
     @DisplayName("Should persist settings to disk")
     void testSettingsPersistedToDisk() throws Exception {

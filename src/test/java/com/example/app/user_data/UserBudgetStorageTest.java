@@ -9,12 +9,33 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the UserBudgetStorage class.
+ * Tests the functionality for reading and writing budget data to storage,
+ * including file and directory creation, data persistence, and error handling.
+ */
 class UserBudgetStorageTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_budgetstorage";
+    
+    /**
+     * Path to the budget file for the test user.
+     */
     private static final String BUDGET_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_budgets.csv";
+    
+    /**
+     * File object representing the budget file.
+     */
     private static final File BUDGET_FILE = new File(BUDGET_FILE_PATH);
 
+    /**
+     * Sets up the test environment before each test.
+     * Cleans up any existing test files and directories, then initializes
+     * the UserBudgetStorage with the test username.
+     */
     @BeforeEach
     void setUp() {
         // Clean up before test
@@ -32,6 +53,11 @@ class UserBudgetStorageTest {
         UserBudgetStorage.setUsername(TEST_USERNAME);
     }
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the budget file, its parent directory, and the user_data directory
+     * if it's empty to avoid leaving test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
         File dir = BUDGET_FILE.getParentFile();
@@ -44,6 +70,10 @@ class UserBudgetStorageTest {
         // Do NOT delete user_data directory!
     }
 
+    /**
+     * Tests that initializing the storage creates the necessary file and directory.
+     * Verifies that both the budget file and its parent directory are created.
+     */
     @Test
     @DisplayName("Should create budget file and directory if not exist")
     void testInitializeStorageCreatesFileAndDirectory() {
@@ -51,6 +81,11 @@ class UserBudgetStorageTest {
         assertTrue(BUDGET_FILE.getParentFile().exists(), "Budget directory should be created");
     }
 
+    /**
+     * Tests that budgets can be saved and loaded correctly.
+     * Verifies that all budget fields (category, amount, start date, end date)
+     * are preserved when saved and loaded.
+     */
     @Test
     @DisplayName("Should write and read budgets correctly")
     void testSaveAndLoadBudgets() {
@@ -71,6 +106,11 @@ class UserBudgetStorageTest {
         assertNull(loaded.get(1)[3]);
     }
 
+    /**
+     * Tests that an empty list is returned if the budget file does not exist.
+     * Verifies the storage's resilience to missing files by ensuring a non-null
+     * empty list is returned rather than throwing an exception.
+     */
     @Test
     @DisplayName("Should load empty list if file does not exist")
     void testLoadBudgetsFileNotExist() {
@@ -84,6 +124,12 @@ class UserBudgetStorageTest {
         assertTrue(loaded.isEmpty());
     }
 
+    /**
+     * Tests that budgets are correctly persisted to disk.
+     * Verifies by reading the file directly that budget data is properly written to the CSV file.
+     * 
+     * @throws Exception If there is an error reading the file
+     */
     @Test
     @DisplayName("Should persist budgets to disk")
     void testBudgetsPersistedToDisk() throws Exception {

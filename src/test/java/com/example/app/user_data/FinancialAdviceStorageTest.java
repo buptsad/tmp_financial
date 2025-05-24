@@ -8,12 +8,33 @@ import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the FinancialAdviceStorage class.
+ * Tests the functionality for reading and writing financial advice to storage,
+ * including file and directory creation, persistence, and default value handling.
+ */
 class FinancialAdviceStorageTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_advice";
+    
+    /**
+     * Path to the advice file for the test user.
+     */
     private static final String ADVICE_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_advice.txt";
+    
+    /**
+     * File object representing the advice file.
+     */
     private static final File ADVICE_FILE = new File(ADVICE_FILE_PATH);
 
+    /**
+     * Sets up the test environment before each test.
+     * Cleans up any existing test files and directories, then initializes
+     * the FinancialAdviceStorage with the test username.
+     */
     @BeforeEach
     void setUp() {
         // Clean up before test
@@ -30,6 +51,11 @@ class FinancialAdviceStorageTest {
         FinancialAdviceStorage.setUsername(TEST_USERNAME);
     }
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the advice file, its parent directory, and the user_data directory
+     * if it's empty to avoid leaving test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
         File dir = ADVICE_FILE.getParentFile();
@@ -42,6 +68,10 @@ class FinancialAdviceStorageTest {
         // Do NOT delete user_data directory!
     }
 
+    /**
+     * Tests that initializing the storage creates the necessary file and directory.
+     * Verifies that both the advice file and its parent directory are created.
+     */
     @Test
     @DisplayName("Should create advice file and directory if not exist")
     void testInitializeStorageCreatesFileAndDirectory() {
@@ -49,6 +79,10 @@ class FinancialAdviceStorageTest {
         assertTrue(ADVICE_FILE.getParentFile().exists(), "Advice directory should be created");
     }
 
+    /**
+     * Tests that advice can be saved and loaded correctly.
+     * Verifies that the advice text and timestamp are preserved when saved and loaded.
+     */
     @Test
     @DisplayName("Should write and read advice correctly")
     void testSaveAndLoadAdvice() {
@@ -62,6 +96,10 @@ class FinancialAdviceStorageTest {
         assertEquals(now, ((LocalDateTime) loaded[1]).withNano(0));
     }
 
+    /**
+     * Tests that default advice is loaded if the advice file does not exist.
+     * Verifies that when the file is missing, default welcome text is returned.
+     */
     @Test
     @DisplayName("Should load default advice if file does not exist")
     void testLoadDefaultAdviceIfFileMissing() {
@@ -76,6 +114,10 @@ class FinancialAdviceStorageTest {
         assertNotNull(loaded[1]);
     }
 
+    /**
+     * Tests that null is returned if the file is missing after initialization.
+     * Verifies that if the file is deleted after storage initialization, loadAdvice returns null.
+     */
     @Test
     @DisplayName("Should return null if file is missing after initialization")
     void testLoadAdviceReturnsNullIfFileMissing() {
@@ -84,6 +126,12 @@ class FinancialAdviceStorageTest {
         assertNull(loaded, "Should return null if file is missing");
     }
 
+    /**
+     * Tests that advice is correctly persisted to disk.
+     * Verifies the exact file format by reading the file directly and checking its contents.
+     * 
+     * @throws Exception If there is an error reading the file
+     */
     @Test
     @DisplayName("Should persist advice to disk")
     void testAdvicePersistedToDisk() throws Exception {

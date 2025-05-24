@@ -8,12 +8,33 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the UserBillStorage class.
+ * Tests the functionality for reading and writing transaction data to storage,
+ * including file and directory creation, data persistence, and error handling.
+ */
 class UserBillStorageTest {
 
+    /**
+     * Test username used for creating isolated test environment.
+     */
     private static final String TEST_USERNAME = "testuser_billstorage";
+    
+    /**
+     * Path to the bill file for the test user.
+     */
     private static final String BILL_FILE_PATH = ".\\user_data\\" + TEST_USERNAME + "\\user_bill.csv";
+    
+    /**
+     * File object representing the bill file.
+     */
     private static final File BILL_FILE = new File(BILL_FILE_PATH);
 
+    /**
+     * Sets up the test environment before each test.
+     * Cleans up any existing test files and directories, then initializes
+     * the UserBillStorage with the test username.
+     */
     @BeforeEach
     void setUp() {
         // Clean up before test
@@ -31,6 +52,11 @@ class UserBillStorageTest {
         UserBillStorage.setUsername(TEST_USERNAME);
     }
 
+    /**
+     * Cleans up test files and directories after all tests are complete.
+     * Removes the bill file, its parent directory, and the user_data directory
+     * if it's empty to avoid leaving test artifacts.
+     */
     @AfterAll
     static void cleanUp() {
         File dir = BILL_FILE.getParentFile();
@@ -43,6 +69,10 @@ class UserBillStorageTest {
         // Do NOT delete user_data directory!
     }
 
+    /**
+     * Tests that initializing the storage creates the necessary file and directory.
+     * Verifies that both the bill file and its parent directory are created.
+     */
     @Test
     @DisplayName("Should create bill file and directory if not exist")
     void testInitializeStorageCreatesFileAndDirectory() {
@@ -50,6 +80,11 @@ class UserBillStorageTest {
         assertTrue(BILL_FILE.getParentFile().exists(), "Bill directory should be created");
     }
 
+    /**
+     * Tests that transactions can be saved and loaded correctly.
+     * Verifies that all transaction fields (date, description, category, amount, recurring flag)
+     * are preserved when saved and loaded.
+     */
     @Test
     @DisplayName("Should write and read transactions correctly")
     void testSaveAndLoadTransactions() {
@@ -74,6 +109,11 @@ class UserBillStorageTest {
         assertEquals(false, loaded.get(1)[4]);
     }
 
+    /**
+     * Tests that an empty list is returned if the bill file does not exist.
+     * Verifies the storage's resilience to missing files by ensuring a non-null
+     * empty list is returned rather than throwing an exception.
+     */
     @Test
     @DisplayName("Should load empty list if file does not exist")
     void testLoadTransactionsFileNotExist() {
@@ -87,6 +127,12 @@ class UserBillStorageTest {
         assertTrue(loaded.isEmpty());
     }
 
+    /**
+     * Tests that transactions are correctly persisted to disk.
+     * Verifies by reading the file directly that transaction data is properly written to the CSV file.
+     * 
+     * @throws Exception If there is an error reading the file
+     */
     @Test
     @DisplayName("Should persist transactions to disk")
     void testTransactionsPersistedToDisk() throws Exception {
