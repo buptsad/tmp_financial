@@ -177,13 +177,10 @@ public class UserBillStorage {
 
     /**
      * Saves the given transactions to the CSV file.
-     * Uses AI classification to assign categories in batches.
      * @param transactions List of transactions to save
      * @return true if successful, false otherwise
      */
     public static boolean saveTransactions(List<Object[]> transactions) {
-        classification classify = new classification();
-        String API_KEY = "sk-fdf26a37926f46ab8d4884c2cd533db8";
         try (PrintWriter writer = new PrintWriter(new FileWriter(billFile))) {
             // Write CSV header
             writer.println(CSV_HEADER);
@@ -194,75 +191,15 @@ public class UserBillStorage {
                 return true;
             }
 
-            // Process transactions in batches of 20
-            final int BATCH_SIZE = 20;
-            List<String> allCategories = new ArrayList<>();
-
-            for (int batchStart = 0; batchStart < transactions.size(); batchStart += BATCH_SIZE) {
-                int batchEnd = Math.min(batchStart + BATCH_SIZE, transactions.size());
-                List<Object[]> batchTransactions = transactions.subList(batchStart, batchEnd);
-
-                // Build string for current batch
-                StringBuilder stringTransactions = new StringBuilder();
-                for (Object[] transaction : batchTransactions) {
-                    String dateStr = (String) transaction[0];
-                    String description = escapeCSV((String) transaction[1]);
-                    String category = escapeCSV((String) transaction[2]);
-                    String amount = String.valueOf(transaction[3]);
-
-                    stringTransactions.append(dateStr).append(",")
-                                     .append(description).append(",")
-                                     .append(category).append(",")
-                                     .append(amount).append("\r\n");
-                }
-
-                System.out.println("Processing batch " + (batchStart/BATCH_SIZE + 1) + ": " + batchTransactions.size() + " transactions");
-
-                // Call AI API for classification
-                String response = classify.getResponse(API_KEY, stringTransactions.toString());
-                System.out.println("AI Response: " + response);
-
-                response = new classification().parseAIResponse(response);
-                System.out.println("Parsed AI Response: " + response);
-
-                // Save batch classification results
-                String[] batchCategories = response.split(",");
-                for (String category : batchCategories) {
-                    allCategories.add(category);
-                }
-
-                System.out.println("Batch categories: ");
-                for (String category : batchCategories) {
-                    System.out.print(category + " ");
-                }
-                System.out.println();
-            }
-
-            // Use all collected categories for writing transactions
-            String[] categories = allCategories.toArray(new String[0]);
-            if (categories.length == 0) {
-                categories = new String[]{"other"}; // Provide default value
-            }
-
-            System.out.println("All categories: ");
-            for (String category : categories) {
-                System.out.print(category + " ");
-            }
-            System.out.println();
-
-            // Write each transaction
-            int i = 0;
+            // Write each transaction with its original category
             for (Object[] transaction : transactions) {
                 String dateStr = (String) transaction[0];
                 String description = escapeCSV((String) transaction[1]);
-                // Use classification result, cycle through category array
-                String category = categories.length > 0 ?
-                    categories[i % categories.length] : "other";
+                String category = escapeCSV((String) transaction[2]);
                 double amount = (Double) transaction[3];
                 boolean confirmed = transaction.length > 4 ? (Boolean) transaction[4] : false;
 
                 writer.println(String.format(CSV_FORMAT, dateStr, description, category, amount, confirmed));
-                i++;
             }
 
             LOGGER.log(Level.INFO, "Successfully saved {0} transactions to: {1}",
